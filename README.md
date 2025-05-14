@@ -325,6 +325,25 @@ The bot includes error handling to catch and log exceptions. Check the logs if y
 - Use IP whitelisting for API access when available
 - Enable 2FA on your exchange accounts
 
+# Telegram Crypto Bot
+
+This is a Telegram bot for trading and sniping meme coins.
+
+## Features
+
+- /price → returns current BTC or ETH price
+- /alerts → set price alerts
+- /snipe → start meme coin sniping
+- /log → send latest error log
+
+## Installation
+
+Clone this repo and run:
+
+```bash
+python3 bot.py
+
 ## Disclaimer
 
 This bot is provided for educational and informational purposes only. Trading cryptocurrencies involves significant risk. Use this bot at your own risk.
+Webhook update test: 🚀 Wed May 14 17:09:41 UTC 2025
