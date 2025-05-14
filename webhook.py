@@ -1,20 +1,30 @@
-from flask import Flask, request
 import os
-import git
 import subprocess
+from flask import Flask, request
+from git import Repo
 
 app = Flask(__name__)
+REPO_DIR = os.path.abspath(os.path.dirname(__file__))
 
-@app.route('/webhook', methods=['POST'])
+@app.route("/trigger", methods=["POST"])
 def webhook():
-    repo = git.Repo('/root/telegram_crypto_bot')
-    origin = repo.remotes.origin
-    origin.pull()
-    
-    # Optional: restart the bot with PM2
-    subprocess.run(["pm2", "restart", "crypto-bot"])
+    print("✅ Webhook received!")
 
-    return 'Webhook received and bot updated!', 200
+    try:
+        # Pull latest changes from GitHub
+        print("[INFO] Pulling latest changes...")
+        repo = Repo(REPO_DIR)
+        origin = repo.remotes.origin
+        origin.pull()
 
-if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=5000)
+        # Restart the bot with PM2
+        print("[INFO] Restarting crypto-bot using PM2...")
+        subprocess.run(["pm2", "restart", "crypto-bot"], check=True)
+
+        return "✔ Updated and restarted.\n", 200
+    except Exception as e:
+        print(f"[ERROR] {e}")
+        return f"❌ Error: {e}\n", 500
+
+if __name__ == "__main__":
+    app.run(host="0.0.0.0", port=5000)
