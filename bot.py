@@ -62,3 +62,15 @@ BOT_TOKEN = config.TELEGRAM_BOT_TOKEN
 if not BOT_TOKEN:
     logger.error("No bot token found. Please set the TELEGRAM_BOT_TOKEN environment variable.")
     sys.exit(1)
+
+# ====== Start Bot ======
+async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    await update.message.reply_text("👋 Welcome to Crypto Bot! Ready to snipe some coins?")
+
+if __name__ == "__main__":
+    application = Application.builder().token(BOT_TOKEN).build()
+
+    application.add_handler(CommandHandler("start", start))
+
+    logger.info("Bot is now polling Telegram for messages...")
+    application.run_polling()
