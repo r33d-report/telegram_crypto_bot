@@ -1,3 +1,16 @@
+import os
+from dotenv import load_dotenv
+
+# Load .env file
+load_dotenv()
+
+# Example: access your environment variables
+telegram_token = os.getenv("TELEGRAM_BOT_TOKEN")
+coinbase_secret = os.getenv("COINBASE_API_SECRET")
+
+print("Bot token loaded:", telegram_token[:10], "...")
+print("Coinbase secret starts with:", coinbase_secret[:20])
+
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
