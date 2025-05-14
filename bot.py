@@ -1,3 +1,8 @@
+from dotenv import load_dotenv
+load_dotenv()
+
+import os
+BTCC_API_KEY = os.getenv("BTCC_API_KEY")
 
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
