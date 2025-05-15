@@ -11,7 +11,7 @@ from utils.logger import setup_logger
 
 
 class BTCCExchange(BaseExchange):
-    BASE_URL = "https://api.btcc.com"
+    BASE_URL = "https://spotapi2.btcccdn.com"
 
     def __init__(self, api_key: str, api_secret: str, logger: Optional[logging.Logger] = None):
         super().__init__(api_key, api_secret, logger or setup_logger("btcc_exchange"))
