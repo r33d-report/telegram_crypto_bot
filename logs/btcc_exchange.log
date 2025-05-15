@@ -1,0 +1,1 @@
+2025-05-15 02:55:47,200 - btcc_exchange - ERROR - API request failed: HTTPSConnectionPool(host='api.btcc.com', port=443): Max retries exceeded with url: /v1/order/create (Caused by NameResolutionError("<urllib3.connection.HTTPSConnection object at 0x7fded869fe50>: Failed to resolve 'api.btcc.com' ([Errno -2] Name or service not known)"))
