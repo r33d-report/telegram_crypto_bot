@@ -3,14 +3,20 @@ import hmac
 import hashlib
 import json
 import logging
+<<<<<<< HEAD
 from typing import Dict, Optional, Any
 import requests
+=======
+import requests
+from typing import Dict, Any, Optional
+>>>>>>> 2703b9b9f8376dfac056425b18c29a4cd410e9ee
 
 from .base import BaseExchange
 from utils.logger import setup_logger
 
+
 class BTCCExchange(BaseExchange):
-    BASE_URL = "https://api.btcc.com"
+    BASE_URL = "https://spotapi2.btcccdn.com"
 
     def __init__(self, api_key: str, api_secret: str, logger: Optional[logging.Logger] = None):
         super().__init__(api_key, api_secret, logger or setup_logger("btcc_exchange"))
@@ -22,6 +28,7 @@ class BTCCExchange(BaseExchange):
 
     def _generate_signature(self, method: str, endpoint: str, params: Dict = None, data: Dict = None) -> Dict[str, str]:
         timestamp = str(int(time.time() * 1000))
+<<<<<<< HEAD
 
         query_string = ""
         if params:
@@ -30,6 +37,10 @@ class BTCCExchange(BaseExchange):
         body_string = ""
         if data:
             body_string = json.dumps(data)
+=======
+        query_string = "&".join(f"{k}={v}" for k, v in sorted(params.items())) if params else ""
+        body_string = json.dumps(data) if data else ""
+>>>>>>> 2703b9b9f8376dfac056425b18c29a4cd410e9ee
 
         message = f"{timestamp}{method.upper()}{endpoint}"
         if query_string:
@@ -38,8 +49,13 @@ class BTCCExchange(BaseExchange):
             message += body_string
 
         signature = hmac.new(
+<<<<<<< HEAD
             self.api_secret.encode('utf-8'),
             message.encode('utf-8'),
+=======
+            self.api_secret.encode(),
+            message.encode(),
+>>>>>>> 2703b9b9f8376dfac056425b18c29a4cd410e9ee
             hashlib.sha256
         ).hexdigest()
 
@@ -49,8 +65,9 @@ class BTCCExchange(BaseExchange):
             'BTCC-API-SIGNATURE': signature
         }
 
-    def _request(self, method: str, endpoint: str, params: Dict = None, data: Dict = None, auth: bool = False) -> Dict:
+    def _request(self, method: str, endpoint: str, params: Dict = None, data: Dict = None, auth: bool = False) -> Dict[str, Any]:
         url = f"{self.BASE_URL}{endpoint}"
+<<<<<<< HEAD
         headers = {}
 
         if auth:
@@ -66,31 +83,51 @@ class BTCCExchange(BaseExchange):
             else:
                 raise ValueError(f"Unsupported HTTP method: {method}")
 
+=======
+        headers = self._generate_signature(method, endpoint, params, data) if auth else {}
+
+        try:
+            response = self.session.request(method=method, url=url, params=params, json=data, headers=headers)
+>>>>>>> 2703b9b9f8376dfac056425b18c29a4cd410e9ee
             response.raise_for_status()
             return response.json()
         except requests.exceptions.RequestException as e:
-            self.logger.error(f"API request failed: {str(e)}")
-            if hasattr(e.response, 'text'):
-                self.logger.error(f"Response: {e.response.text}")
+            self.logger.error(f"API request failed: {e}")
             raise
 
     def get_ticker(self, symbol: str) -> Dict[str, Any]:
+<<<<<<< HEAD
         formatted = symbol.replace('/', '_')
         endpoint = f"/v1/market/ticker/{formatted}"
         return self._request('GET', endpoint)
+=======
+        formatted_symbol = symbol.replace('/', '_')
+        endpoint = f"/v1/market/ticker/{formatted_symbol}"
+        return self._request("GET", endpoint)
+>>>>>>> 2703b9b9f8376dfac056425b18c29a4cd410e9ee
 
     def get_balance(self) -> Dict[str, float]:
         endpoint = "/v1/account/balance"
-        response = self._request('GET', endpoint, auth=True)
-        return {item['currency']: float(item['available']) for item in response.get('data', [])}
+        res = self._request("GET", endpoint, auth=True)
+        return {asset['currency']: float(asset['available']) for asset in res.get('data', [])}
 
     def get_order_book(self, symbol: str, limit: int = 20) -> Dict[str, Any]:
+<<<<<<< HEAD
         formatted = symbol.replace('/', '_')
         endpoint = f"/v1/market/depth/{formatted}"
         return self._request("GET", endpoint, params={"limit": limit})
 
     def place_market_order(self, symbol: str, side: str, amount: float) -> Dict[str, Any]:
         formatted = symbol.replace('/', '_')
+=======
+        formatted_symbol = symbol.replace('/', '_')
+        endpoint = f"/v1/market/depth/{formatted_symbol}"
+        params = {'limit': limit}
+        return self._request("GET", endpoint, params=params)
+
+    def place_market_order(self, symbol: str, side: str, amount: float) -> Dict[str, Any]:
+        formatted_symbol = symbol.replace('/', '_')
+>>>>>>> 2703b9b9f8376dfac056425b18c29a4cd410e9ee
         endpoint = "/v1/order/create"
         data = {
             'symbol': formatted,
@@ -98,10 +135,17 @@ class BTCCExchange(BaseExchange):
             'type': 'market',
             'quantity': str(amount)
         }
+<<<<<<< HEAD
         return self._request('POST', endpoint, data=data, auth=True)
 
     def place_limit_order(self, symbol: str, side: str, amount: float, price: float) -> Dict[str, Any]:
         formatted = symbol.replace('/', '_')
+=======
+        return self._request("POST", endpoint, data=data, auth=True)
+
+    def place_limit_order(self, symbol: str, side: str, amount: float, price: float) -> Dict[str, Any]:
+        formatted_symbol = symbol.replace('/', '_')
+>>>>>>> 2703b9b9f8376dfac056425b18c29a4cd410e9ee
         endpoint = "/v1/order/create"
         data = {
             'symbol': formatted,
@@ -110,6 +154,7 @@ class BTCCExchange(BaseExchange):
             'quantity': str(amount),
             'price': str(price)
         }
+<<<<<<< HEAD
         return self._request('POST', endpoint, data=data, auth=True)
 
     def cancel_order(self, order_id: str, symbol: Optional[str] = None) -> bool:
@@ -132,3 +177,23 @@ class BTCCExchange(BaseExchange):
         params = {'symbol': formatted, 'orderId': order_id}
         return self._request('GET', endpoint, params=params, auth=True)
 
+=======
+        return self._request("POST", endpoint, data=data, auth=True)
+
+    def cancel_order(self, order_id: str, symbol: Optional[str] = None) -> bool:
+        if not symbol:
+            raise ValueError("Symbol is required to cancel orders on BTCC")
+        formatted_symbol = symbol.replace('/', '_')
+        endpoint = "/v1/order/cancel"
+        data = {'symbol': formatted_symbol, 'orderId': order_id}
+        self._request("POST", endpoint, data=data, auth=True)
+        return True
+
+    def get_order_status(self, order_id: str, symbol: Optional[str] = None) -> Dict[str, Any]:
+        if not symbol:
+            raise ValueError("Symbol is required for order status")
+        formatted_symbol = symbol.replace('/', '_')
+        endpoint = "/v1/order/status"
+        params = {'symbol': formatted_symbol, 'orderId': order_id}
+        return self._request("GET", endpoint, params=params, auth=True)
+>>>>>>> 2703b9b9f8376dfac056425b18c29a4cd410e9ee
