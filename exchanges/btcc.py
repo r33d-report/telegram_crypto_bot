@@ -1,50 +1,56 @@
 import os
+import sys
+import json
+import logging
 from dotenv import load_dotenv
-from telegram import Update
-from telegram.ext import Application, CommandHandler, ContextTypes
-from exchanges.btcc import BTCCExchange, quick_buy_btc
-from utils.logger import setup_logger
-from config import config
+from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
+from telegram.ext import Application, CommandHandler, CallbackQueryHandler, ContextTypes
 
-# Load environment variables
+# Load .env file
 load_dotenv()
 
-# Setup logger
+telegram_token = os.getenv("TELEGRAM_BOT_TOKEN")
+
+print("Bot token loaded:", telegram_token[:10], "...")
+
+# Set up logging
+from utils.logger import setup_logger
 logger = setup_logger("bot")
 
-# API Keys
-BTCC_API_KEY = os.getenv("BTCC_API_KEY")
-BTCC_API_SECRET = os.getenv("BTCC_API_SECRET")
-BOT_TOKEN = config.TELEGRAM_BOT_TOKEN
+# Import exchanges
+from exchanges.btcc import BTCCExchange, quick_buy_btc
 
-# Initialize BTCC Client
-btcc_client = BTCCExchange(BTCC_API_KEY, BTCC_API_SECRET)
+btcc = BTCCExchange(
+    api_key=os.getenv("BTCC_API_KEY"),
+    api_secret=os.getenv("BTCC_API_SECRET"),
+    logger=setup_logger("btcc")
+)
 
-# Start command
+# === Bot Commands ===
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    await update.message.reply_text(
-        "👋 Welcome to Crypto Bot!\nUse /buybtc to quickly buy 0.0005 BTC on BTCC."
-    )
+    keyboard = [
+        [InlineKeyboardButton("💰 Buy BTC", callback_data="buy_btc")],
+    ]
+    reply_markup = InlineKeyboardMarkup(keyboard)
+    await update.message.reply_text("Choose an action:", reply_markup=reply_markup)
 
-# Buy BTC command
-async def buybtc(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    user = update.effective_user.first_name
-    await update.message.reply_text(f"🚀 Placing market buy order for 0.0005 BTC...")
+async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    query = update.callback_query
+    await query.answer()
 
-    result = quick_buy_btc(btcc_client, amount=0.0005)
+    if query.data == "buy_btc":
+        result = quick_buy_btc(btcc)
+        if "error" in result:
+            await query.edit_message_text(f"❌ Error placing order: {result['error']}")
+        else:
+            await query.edit_message_text(f"✅ Order placed!\n\n{json.dumps(result, indent=2)}")
 
-    if "error" in result:
-        await update.message.reply_text(f"❌ Failed: {result['error']}")
-    else:
-        order_id = result.get("data", {}).get("orderId", "N/A")
-        await update.message.reply_text(f"✅ Order placed! ID: {order_id}")
-
-# Run the bot
+# === Main Execution ===
 if __name__ == "__main__":
-    application = Application.builder().token(BOT_TOKEN).build()
+    application = Application.builder().token(telegram_token).build()
 
     application.add_handler(CommandHandler("start", start))
-    application.add_handler(CommandHandler("buybtc", buybtc))
+    application.add_handler(CallbackQueryHandler(button_handler))
 
-    logger.info("✅ Bot is running with real trading support...")
+    logger.info("✅ Bot is running with button UI...")
     application.run_polling()
