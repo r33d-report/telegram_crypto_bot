@@ -306,3 +306,21 @@ class BTCCExchange(BaseExchange):
         
         self.logger.info(f"Retrieved status for order {order_id}")
         return response
+# === Convenience wrapper for Telegram bot ===
+
+def quick_buy_btc(btcc_exchange: BTCCExchange, amount: float = 0.0005) -> Dict[str, Any]:
+    """
+    Places a quick market buy order for BTC/USDT.
+
+    Args:
+        btcc_exchange (BTCCExchange): An instance of the BTCCExchange client
+        amount (float): Amount of BTC to buy (default: 0.0005 BTC)
+
+    Returns:
+        Dict[str, Any]: API response from BTCC
+    """
+    try:
+        result = btcc_exchange.place_market_order("BTC/USDT", "buy", amount)
+        return result
+    except Exception as e:
+        return {"error": str(e)}
