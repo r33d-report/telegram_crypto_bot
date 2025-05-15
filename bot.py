@@ -1,60 +1,72 @@
-from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
-from telegram.ext import Application, CommandHandler, CallbackQueryHandler, ContextTypes
 import os
+import sys
+import logging
 from dotenv import load_dotenv
 
-# Load environment variables
+from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
+from telegram.ext import (
+    Application, CommandHandler, CallbackQueryHandler,
+    ContextTypes
+)
+
+from exchanges.btcc import BTCCExchange
+from config import config
+from utils.logger import setup_logger
+
+# === Load .env ===
 load_dotenv()
-BOT_TOKEN = os.getenv("TELEGRAM_BOT_TOKEN")
+logger = setup_logger("bot")
 
-# Placeholder user database
-user_data = {}
+BOT_TOKEN = config.TELEGRAM_BOT_TOKEN
+BTCC_API_KEY = os.getenv("BTCC_API_KEY")
+BTCC_API_SECRET = os.getenv("BTCC_API_SECRET")
 
-# Main menu
+btcc = BTCCExchange(BTCC_API_KEY, BTCC_API_SECRET)
+
+# === Start Command ===
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     keyboard = [
-        [
-            InlineKeyboardButton("📊 Balance", callback_data="balance"),
-            InlineKeyboardButton("💸 Deposit", callback_data="deposit")
-        ],
-        [
-            InlineKeyboardButton("📈 Trade", callback_data="trade"),
-            InlineKeyboardButton("🔔 Alerts", callback_data="alerts")
-        ],
-        [
-            InlineKeyboardButton("🧠 AI Strategy", callback_data="ai_strategy"),
-            InlineKeyboardButton("⚙️ Settings", callback_data="settings")
-        ]
+        [InlineKeyboardButton("💰 Buy BTC", callback_data="buy_btc")],
+        [InlineKeyboardButton("📊 Portfolio", callback_data="balance")],
+        [InlineKeyboardButton("⚙️ Trade Settings", callback_data="settings")],
     ]
     reply_markup = InlineKeyboardMarkup(keyboard)
-    await update.message.reply_text("🤖 Welcome to the Crypto Bot!", reply_markup=reply_markup)
+    await update.message.reply_text("🤖 Welcome to Crypto Bot! Choose an option below:", reply_markup=reply_markup)
 
-# Callback handler
-async def button(update: Update, context: ContextTypes.DEFAULT_TYPE):
+# === Button Clicks ===
+async def handle_button(update: Update, context: ContextTypes.DEFAULT_TYPE):
     query = update.callback_query
     await query.answer()
-    data = query.data
 
-    # You can expand this logic per platform/API integration
-    if data == "balance":
-        await query.edit_message_text(text="📊 Your balance is: $10,000 (Demo)")
-    elif data == "deposit":
-        await query.edit_message_text(text="💸 Send crypto to your deposit address: ...")
-    elif data == "trade":
-        await query.edit_message_text(text="📈 Trading module coming soon!")
-    elif data == "alerts":
-        await query.edit_message_text(text="🔔 Set price alerts in the next version.")
-    elif data == "ai_strategy":
-        await query.edit_message_text(text="🧠 AI Strategies not available yet.")
-    elif data == "settings":
-        await query.edit_message_text(text="⚙️ Customize your bot experience.")
-    else:
-        await query.edit_message_text(text="❓ Unknown option.")
+    if query.data == "buy_btc":
+        await query.edit_message_text("🛒 Placing market buy order for 0.0005 BTC...")
+        try:
+            result = btcc.place_market_order("BTC/USDT", "buy", 0.0005)
+            await query.message.reply_text(f"✅ Order placed: {result}")
+        except Exception as e:
+            await query.message.reply_text(f"❌ Failed to buy BTC: {e}")
 
-# Run the bot
+    elif query.data == "balance":
+        await query.edit_message_text("📊 Fetching balance...")
+        try:
+            balance = btcc.get_balance()
+            balance_str = "\n".join([f"{k}: {v}" for k, v in balance.items()])
+            await query.message.reply_text(f"💰 Account Balance:\n{balance_str}")
+        except Exception as e:
+            await query.message.reply_text(f"❌ Failed to fetch balance: {e}")
+
+    elif query.data == "settings":
+        await query.edit_message_text("⚙️ Settings menu coming soon.")
+
+# === Telegram Bot Init ===
 if __name__ == "__main__":
+    if not BOT_TOKEN:
+        logger.error("Missing TELEGRAM_BOT_TOKEN")
+        sys.exit(1)
+
     app = Application.builder().token(BOT_TOKEN).build()
     app.add_handler(CommandHandler("start", start))
-    app.add_handler(CallbackQueryHandler(button))
-    print("✅ Bot is running with button UI...")
+    app.add_handler(CallbackQueryHandler(handle_button))
+
+    logger.info("✅ Bot is running with button UI...")
     app.run_polling()
