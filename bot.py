@@ -1,72 +1,50 @@
 import os
-import sys
-import logging
 from dotenv import load_dotenv
-
-from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
-from telegram.ext import (
-    Application, CommandHandler, CallbackQueryHandler,
-    ContextTypes
-)
-
+from telegram import Update, ReplyKeyboardMarkup
+from telegram.ext import Application, CommandHandler, ContextTypes
 from exchanges.btcc import BTCCExchange
-from config import config
 from utils.logger import setup_logger
 
-# === Load .env ===
+# Load env
 load_dotenv()
-logger = setup_logger("bot")
-
-BOT_TOKEN = config.TELEGRAM_BOT_TOKEN
+BOT_TOKEN = os.getenv("TELEGRAM_BOT_TOKEN")
 BTCC_API_KEY = os.getenv("BTCC_API_KEY")
 BTCC_API_SECRET = os.getenv("BTCC_API_SECRET")
 
-btcc = BTCCExchange(BTCC_API_KEY, BTCC_API_SECRET)
+# Setup logger
+logger = setup_logger("bot")
 
-# === Start Command ===
+# Init BTCC
+btcc = BTCCExchange(api_key=BTCC_API_KEY, api_secret=BTCC_API_SECRET)
+
+# Start command
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     keyboard = [
-        [InlineKeyboardButton("💰 Buy BTC", callback_data="buy_btc")],
-        [InlineKeyboardButton("📊 Portfolio", callback_data="balance")],
-        [InlineKeyboardButton("⚙️ Trade Settings", callback_data="settings")],
+        ["📊 Balance", "🐝 Deposit"],
+        ["📈 Trade", "🔔 Alerts"],
+        ["🧠 AI Strategy", "⚙️ Settings"]
     ]
-    reply_markup = InlineKeyboardMarkup(keyboard)
-    await update.message.reply_text("🤖 Welcome to Crypto Bot! Choose an option below:", reply_markup=reply_markup)
+    reply_markup = ReplyKeyboardMarkup(keyboard, resize_keyboard=True)
+    await update.message.reply_text("🤖 Welcome to the Crypto Bot!", reply_markup=reply_markup)
 
-# === Button Clicks ===
-async def handle_button(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    query = update.callback_query
-    await query.answer()
+# Buy BTC command
+async def buybtc_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    try:
+        amount = 0.0005  # default amount
+        result = btcc.place_market_order("BTC/USDT", "buy", amount)
+        message = f"✅ Order placed:\nID: {result.get('data', {}).get('orderId', 'N/A')}"
+    except Exception as e:
+        message = f"❌ Error placing order: {str(e)}"
+    await update.message.reply_text(message)
 
-    if query.data == "buy_btc":
-        await query.edit_message_text("🛒 Placing market buy order for 0.0005 BTC...")
-        try:
-            result = btcc.place_market_order("BTC/USDT", "buy", 0.0005)
-            await query.message.reply_text(f"✅ Order placed: {result}")
-        except Exception as e:
-            await query.message.reply_text(f"❌ Failed to buy BTC: {e}")
-
-    elif query.data == "balance":
-        await query.edit_message_text("📊 Fetching balance...")
-        try:
-            balance = btcc.get_balance()
-            balance_str = "\n".join([f"{k}: {v}" for k, v in balance.items()])
-            await query.message.reply_text(f"💰 Account Balance:\n{balance_str}")
-        except Exception as e:
-            await query.message.reply_text(f"❌ Failed to fetch balance: {e}")
-
-    elif query.data == "settings":
-        await query.edit_message_text("⚙️ Settings menu coming soon.")
-
-# === Telegram Bot Init ===
+# MAIN
 if __name__ == "__main__":
     if not BOT_TOKEN:
-        logger.error("Missing TELEGRAM_BOT_TOKEN")
-        sys.exit(1)
+        logger.error("No bot token found.")
+        exit(1)
 
     app = Application.builder().token(BOT_TOKEN).build()
     app.add_handler(CommandHandler("start", start))
-    app.add_handler(CallbackQueryHandler(handle_button))
-
-    logger.info("✅ Bot is running with button UI...")
+    app.add_handler(CommandHandler("buybtc", buybtc_command))
+    logger.info("✅ Bot is running...")
     app.run_polling()
