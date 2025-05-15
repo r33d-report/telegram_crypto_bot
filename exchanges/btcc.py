@@ -118,3 +118,21 @@ class BTCCExchange(BaseExchange):
         endpoint = "/v1/order/status"
         params = {'symbol': formatted_symbol, 'orderId': order_id}
         return self._request('GET', endpoint, params=params, auth=True)
+def get_order_book(self, symbol: str, limit: int = 20) -> Dict[str, Any]:
+    """
+    Get order book for a symbol.
+
+    Args:
+        symbol (str): Trading pair symbol (e.g., 'BTC/USDT')
+        limit (int): Maximum number of orders to retrieve
+
+    Returns:
+        Dict[str, Any]: Order book data with bids and asks
+    """
+    formatted_symbol = symbol.replace('/', '_')
+    endpoint = f"/v1/market/depth/{formatted_symbol}"
+    params = {'limit': limit}
+    response = self._request('GET', endpoint, params=params)
+
+    self.logger.info(f"Retrieved order book for {symbol} with limit {limit}")
+    return response
