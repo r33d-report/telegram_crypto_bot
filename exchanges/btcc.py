@@ -57,7 +57,9 @@ class BTCCExchange(BaseExchange):
             'BTCC-API-SIGNATURE': signature
         }
 
-    def _request(self, method: str, endpoint: str, params: Dict = None, data: Dict = None, auth: bool = False) -> Dict[str, Any]:
+def _request(self, method: str, endpoint: str, params: Dict = None, data: Dict = None, auth: bool = False) -> Dict:
+    url = f"{self.BASE_URL}{endpoint}"
+    headers = self._generate_signature(method, endpoint, params, data) if auth else {}    def _request(self, method: str, endpoint: str, params: Dict = None, data: Dict = None, auth: bool = False) -> Dict[str, Any]:
         url = f"{self.BASE_URL}{endpoint}"
         headers = {}
 
