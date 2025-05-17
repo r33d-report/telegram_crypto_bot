@@ -1,10 +1,14 @@
 import os
 import asyncio
+import nest_asyncio
 from dotenv import load_dotenv
 from telegram import Update, ReplyKeyboardMarkup
 from telegram.ext import Application, CommandHandler, ContextTypes
 from exchanges.btcc import BTCCExchange
 from utils.logger import setup_logger
+
+# Patch event loop for nested async environments (like PM2)
+nest_asyncio.apply()
 
 # Load environment variables
 load_dotenv()
@@ -56,12 +60,6 @@ async def main():
 if __name__ == "__main__":
     logger.info("✅ Bot is starting...")
     try:
-        loop = asyncio.get_event_loop()
-        if loop.is_running():
-            logger.warning("⚠️ Loop is already running. Using ensure_future instead.")
-            loop.create_task(main())
-        else:
-            loop.run_until_complete(main())
-    except Exception as e:
+        asyncio.run(main())
+    except RuntimeError as e:
         logger.error(f"❌ Error in bot loop: {e}")
-        raise
