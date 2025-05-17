@@ -50,11 +50,12 @@ async def main():
 
 # Run logic
 if __name__ == "__main__":
+    import nest_asyncio
+    import asyncio
+
+    from dotenv import load_dotenv
+    load_dotenv()
+
     logger.info("✅ Bot is starting...")
-    try:
-        nest_asyncio.apply()
-        loop = asyncio.get_event_loop()
-        loop.run_until_complete(main())
-    except Exception as e:
-        logger.error(f"❌ Error in bot loop: {e}")
-        raise
+    nest_asyncio.apply()
+    asyncio.run(main())
