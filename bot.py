@@ -1,11 +1,12 @@
 import os
+import asyncio
 from dotenv import load_dotenv
 from telegram import Update, ReplyKeyboardMarkup
 from telegram.ext import Application, CommandHandler, ContextTypes
 from exchanges.btcc import BTCCExchange
 from utils.logger import setup_logger
 
-# Load env
+# Load environment variables
 load_dotenv()
 BOT_TOKEN = os.getenv("TELEGRAM_BOT_TOKEN")
 BTCC_API_KEY = os.getenv("BTCC_API_KEY")
@@ -14,10 +15,10 @@ BTCC_API_SECRET = os.getenv("BTCC_API_SECRET")
 # Setup logger
 logger = setup_logger("bot")
 
-# Init BTCC
+# Init BTCC exchange
 btcc = BTCCExchange(api_key=BTCC_API_KEY, api_secret=BTCC_API_SECRET)
 
-# Start command
+# /start command
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     keyboard = [
         ["📊 Balance", "🐝 Deposit"],
@@ -27,18 +28,18 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     reply_markup = ReplyKeyboardMarkup(keyboard, resize_keyboard=True)
     await update.message.reply_text("🤖 Welcome to the Crypto Bot!", reply_markup=reply_markup)
 
-# Buy BTC command
+# /buybtc command
 async def buybtc_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     try:
-        amount = 0.0005  # default amount
+        amount = 0.0005  # default buy amount
         result = btcc.place_market_order("BTC/USDT", "buy", amount)
         message = f"✅ Order placed:\nID: {result.get('data', {}).get('orderId', 'N/A')}"
     except Exception as e:
         message = f"❌ Error placing order: {str(e)}"
     await update.message.reply_text(message)
 
-# MAIN
-if __name__ == "__main__":
+# Async entry point
+async def run():
     if not BOT_TOKEN:
         logger.error("No bot token found.")
         exit(1)
@@ -46,12 +47,21 @@ if __name__ == "__main__":
     app = Application.builder().token(BOT_TOKEN).build()
     app.add_handler(CommandHandler("start", start))
     app.add_handler(CommandHandler("buybtc", buybtc_command))
-    
-    async def run():
-        await app.bot.delete_webhook(drop_pending_updates=True)
-        logger.info("✅ Webhook deleted. Starting polling...")
-        await app.run_polling()
 
-    import asyncio
+    await app.bot.delete_webhook(drop_pending_updates=True)
+    logger.info("✅ Webhook deleted. Starting polling...")
+    await app.run_polling()
+
+# Run the bot with fallback if event loop is already active
+if __name__ == "__main__":
     logger.info("✅ Bot is starting...")
-    asyncio.run(run())
+    try:
+        asyncio.run(run())
+    except RuntimeError as e:
+        if "already running" in str(e):
+            logger.warning("⚠️ Event loop already running, using fallback method.")
+            loop = asyncio.get_event_loop()
+            loop.create_task(run())
+            loop.run_forever()
+        else:
+            raise
