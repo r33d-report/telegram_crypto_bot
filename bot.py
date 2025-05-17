@@ -59,8 +59,14 @@ if __name__ == "__main__":
     loop = asyncio.get_event_loop()
     nest_asyncio.apply(loop)
 
+    async def safe_main():
+        try:
+            await main()
+        except Exception as e:
+            logger.error(f"❌ Uncaught error in main: {e}")
+
+    loop.create_task(safe_main())
     try:
-        loop.create_task(main())
         loop.run_forever()
-    except Exception as e:
-        logger.error(f"❌ Error in bot loop: {e}")
+    except KeyboardInterrupt:
+        logger.info("🛑 Bot stopped manually.")
