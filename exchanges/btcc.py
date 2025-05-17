@@ -4,7 +4,7 @@ import hashlib
 import json
 import logging
 import requests
-from typing import Dict, List, Optional, Union, Any
+from typing import Dict, Optional, Any
 
 from .base import BaseExchange
 from utils.logger import setup_logger
@@ -22,7 +22,6 @@ class BTCCExchange(BaseExchange):
 
     def _generate_signature(self, method: str, endpoint: str, params: Dict = None, data: Dict = None) -> Dict[str, str]:
         timestamp = str(int(time.time() * 1000))
-
         query_string = ""
         if params:
             query_string = "&".join([f"{k}={v}" for k, v in sorted(params.items())])
@@ -51,13 +50,10 @@ class BTCCExchange(BaseExchange):
 
     def _request(self, method: str, endpoint: str, params: Dict = None, data: Dict = None, auth: bool = False) -> Dict[str, Any]:
         url = f"{self.BASE_URL}{endpoint}"
-        headers = {}
-        if auth:
-            headers = self._generate_signature(method, endpoint, params, data)
+        headers = self._generate_signature(method, endpoint, params, data) if auth else {}
 
         try:
             self.logger.debug(f"Sending {method} request to {url}")
-
             if method.upper() == 'GET':
                 response = self.session.get(url, params=params, headers=headers)
             elif method.upper() == 'POST':
@@ -79,18 +75,18 @@ class BTCCExchange(BaseExchange):
     def get_ticker(self, symbol: str) -> Dict[str, Any]:
         formatted_symbol = symbol.replace('/', '_')
         endpoint = f"/v1/market/ticker/{formatted_symbol}"
-        response = self._request('GET', endpoint)
-        self.logger.info(f"Retrieved ticker for {symbol}")
-        return response
+        return self._request('GET', endpoint)
 
     def get_balance(self) -> Dict[str, float]:
         endpoint = "/v1/account/balance"
         response = self._request('GET', endpoint, auth=True)
-        balances = {}
-        for asset in response.get('data', []):
-            balances[asset['currency']] = float(asset['available'])
-        self.logger.info("Retrieved account balances")
-        return balances
+        return {asset['currency']: float(asset['available']) for asset in response.get('data', [])}
+
+    def get_order_book(self, symbol: str, limit: int = 20) -> Dict[str, Any]:
+        formatted_symbol = symbol.replace('/', '_')
+        endpoint = f"/v1/market/depth/{formatted_symbol}"
+        params = {'limit': limit}
+        return self._request("GET", endpoint, params=params)
 
     def place_market_order(self, symbol: str, side: str, amount: float) -> Dict[str, Any]:
         formatted_symbol = symbol.replace('/', '_')
@@ -101,9 +97,7 @@ class BTCCExchange(BaseExchange):
             'type': 'market',
             'quantity': str(amount)
         }
-        response = self._request('POST', endpoint, data=data, auth=True)
-        self.logger.info(f"Placed market {side} order for {amount} {symbol}")
-        return response
+        return self._request('POST', endpoint, data=data, auth=True)
 
     def place_limit_order(self, symbol: str, side: str, amount: float, price: float) -> Dict[str, Any]:
         formatted_symbol = symbol.replace('/', '_')
@@ -115,9 +109,7 @@ class BTCCExchange(BaseExchange):
             'quantity': str(amount),
             'price': str(price)
         }
-        response = self._request('POST', endpoint, data=data, auth=True)
-        self.logger.info(f"Placed limit {side} order for {amount} {symbol} at price {price}")
-        return response
+        return self._request('POST', endpoint, data=data, auth=True)
 
     def cancel_order(self, order_id: str, symbol: Optional[str] = None) -> bool:
         if not symbol:
@@ -130,10 +122,8 @@ class BTCCExchange(BaseExchange):
         }
         try:
             self._request('POST', endpoint, data=data, auth=True)
-            self.logger.info(f"Cancelled order {order_id} for {symbol}")
             return True
-        except Exception as e:
-            self.logger.error(f"Failed to cancel order {order_id}: {str(e)}")
+        except Exception:
             return False
 
     def get_order_status(self, order_id: str, symbol: Optional[str] = None) -> Dict[str, Any]:
@@ -145,7 +135,5 @@ class BTCCExchange(BaseExchange):
             'symbol': formatted_symbol,
             'orderId': order_id
         }
-        response = self._request('GET', endpoint, params=params, auth=True)
-        self.logger.info(f"Retrieved status for order {order_id}")
-        return response
+        return self._request('GET', endpoint, params=params, auth=True)
 
