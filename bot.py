@@ -38,7 +38,7 @@ async def buybtc_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
         message = f"❌ Error placing order: {str(e)}"
     await update.message.reply_text(message)
 
-# Async entry point
+# Main async function
 async def run():
     if not BOT_TOKEN:
         logger.error("No bot token found.")
@@ -52,16 +52,15 @@ async def run():
     logger.info("✅ Webhook deleted. Starting polling...")
     await app.run_polling()
 
-# Run the bot with fallback if event loop is already active
+# Async-safe entry point
 if __name__ == "__main__":
     logger.info("✅ Bot is starting...")
     try:
-        asyncio.run(run())
-    except RuntimeError as e:
-        if "already running" in str(e):
-            logger.warning("⚠️ Event loop already running, using fallback method.")
-            loop = asyncio.get_event_loop()
+        loop = asyncio.get_event_loop()
+        if loop.is_running():
+            logger.warning("⚠️ Event loop already running, scheduling task instead.")
             loop.create_task(run())
-            loop.run_forever()
         else:
-            raise
+            loop.run_until_complete(run())
+    except Exception as e:
+        logger.error(f"❌ Error in bot loop: {e}")
