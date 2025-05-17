@@ -49,12 +49,10 @@ async def main():
     await app.run_polling()
 
 # Run logic
+# Boot logic
 if __name__ == "__main__":
     import nest_asyncio
     import asyncio
-
-    from dotenv import load_dotenv
-    load_dotenv()
 
     logger.info("✅ Bot is starting...")
     nest_asyncio.apply()
