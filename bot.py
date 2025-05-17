@@ -31,14 +31,14 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
 # /buybtc command
 async def buybtc_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     try:
-        amount = 0.0005  # default buy amount
+        amount = 0.0005
         result = btcc.place_market_order("BTC/USDT", "buy", amount)
         message = f"✅ Order placed:\nID: {result.get('data', {}).get('orderId', 'N/A')}"
     except Exception as e:
         message = f"❌ Error placing order: {str(e)}"
     await update.message.reply_text(message)
 
-# Main bot function (safe with PM2)
+# Async entry point
 async def main():
     if not BOT_TOKEN:
         logger.error("No bot token found.")
@@ -52,8 +52,16 @@ async def main():
     logger.info("✅ Webhook deleted. Starting polling...")
     await app.run_polling()
 
-# Entry point (for PM2)
+# Boot logic
 if __name__ == "__main__":
     logger.info("✅ Bot is starting...")
-    asyncio.get_event_loop().create_task(main())
-    asyncio.get_event_loop().run_forever()
+    try:
+        loop = asyncio.get_event_loop()
+        if loop.is_running():
+            logger.warning("⚠️ Loop is already running. Using ensure_future instead.")
+            loop.create_task(main())
+        else:
+            loop.run_until_complete(main())
+    except Exception as e:
+        logger.error(f"❌ Error in bot loop: {e}")
+        raise
