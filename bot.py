@@ -60,6 +60,12 @@ async def main():
 if __name__ == "__main__":
     logger.info("✅ Bot is starting...")
     try:
-        asyncio.run(main())
-    except RuntimeError as e:
+        loop = asyncio.get_event_loop()
+        if loop.is_running():
+            logger.warning("⚠️ Loop is already running. Using ensure_future instead.")
+            loop.create_task(main())
+        else:
+            loop.run_until_complete(main())
+    except Exception as e:
         logger.error(f"❌ Error in bot loop: {e}")
+        raise
