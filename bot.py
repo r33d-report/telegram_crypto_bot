@@ -46,5 +46,12 @@ if __name__ == "__main__":
     app = Application.builder().token(BOT_TOKEN).build()
     app.add_handler(CommandHandler("start", start))
     app.add_handler(CommandHandler("buybtc", buybtc_command))
-    logger.info("✅ Bot is running...")
-    app.run_polling()
+    
+    async def run():
+        await app.bot.delete_webhook(drop_pending_updates=True)
+        logger.info("✅ Webhook deleted. Starting polling...")
+        await app.run_polling()
+
+    import asyncio
+    logger.info("✅ Bot is starting...")
+    asyncio.run(run())
