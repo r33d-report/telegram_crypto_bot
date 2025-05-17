@@ -83,9 +83,9 @@ class BTCCExchange(BaseExchange):
         return balances
 
     def get_order_book(self, symbol: str, limit: int = 20) -> Dict[str, Any]:
-        formatted_symbol = symbol.replace("/", "_")
+        formatted_symbol = symbol.replace('/', '_')
         endpoint = f"/v1/market/depth/{formatted_symbol}"
-        params = {"limit": limit}
+        params = {'limit': limit}
         return self._request("GET", endpoint, params=params)
 
     def place_market_order(self, symbol: str, side: str, amount: float) -> Dict[str, Any]:
