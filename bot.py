@@ -7,46 +7,38 @@ from telegram.ext import Application, CommandHandler, ContextTypes
 from exchanges.btcc import BTCCExchange
 from utils.logger import setup_logger
 
-# Patch event loop for nested async environments (like PM2)
-nest_asyncio.apply()
-
-# Load environment variables
+# Load env
 load_dotenv()
 BOT_TOKEN = os.getenv("TELEGRAM_BOT_TOKEN")
 BTCC_API_KEY = os.getenv("BTCC_API_KEY")
 BTCC_API_SECRET = os.getenv("BTCC_API_SECRET")
 
-# Setup logger
+# Logger
 logger = setup_logger("bot")
 
-# Init BTCC exchange
+# Exchange instance
 btcc = BTCCExchange(api_key=BTCC_API_KEY, api_secret=BTCC_API_SECRET)
 
-# /start command
+# Handlers
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    keyboard = [
-        ["📊 Balance", "🐝 Deposit"],
-        ["📈 Trade", "🔔 Alerts"],
-        ["🧠 AI Strategy", "⚙️ Settings"]
-    ]
-    reply_markup = ReplyKeyboardMarkup(keyboard, resize_keyboard=True)
-    await update.message.reply_text("🤖 Welcome to the Crypto Bot!", reply_markup=reply_markup)
+    keyboard = [["📊 Balance", "🐝 Deposit"], ["📈 Trade", "🔔 Alerts"], ["🧠 AI Strategy", "⚙️ Settings"]]
+    markup = ReplyKeyboardMarkup(keyboard, resize_keyboard=True)
+    await update.message.reply_text("🤖 Welcome to the Crypto Bot!", reply_markup=markup)
 
-# /buybtc command
 async def buybtc_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     try:
         amount = 0.0005
         result = btcc.place_market_order("BTC/USDT", "buy", amount)
-        message = f"✅ Order placed:\nID: {result.get('data', {}).get('orderId', 'N/A')}"
+        msg = f"✅ Order placed:\nID: {result.get('data', {}).get('orderId', 'N/A')}"
     except Exception as e:
-        message = f"❌ Error placing order: {str(e)}"
-    await update.message.reply_text(message)
+        msg = f"❌ Error placing order: {str(e)}"
+    await update.message.reply_text(msg)
 
-# Async entry point
+# Main entrypoint
 async def main():
     if not BOT_TOKEN:
-        logger.error("No bot token found.")
-        exit(1)
+        logger.error("❌ No bot token found.")
+        return
 
     app = Application.builder().token(BOT_TOKEN).build()
     app.add_handler(CommandHandler("start", start))
@@ -56,18 +48,13 @@ async def main():
     logger.info("✅ Webhook deleted. Starting polling...")
     await app.run_polling()
 
-# Boot logic
+# Run logic
 if __name__ == "__main__":
     logger.info("✅ Bot is starting...")
-
     try:
-        import nest_asyncio
-        nest_asyncio.apply()  # Patch event loop if already running
-
-        asyncio.run(main())
-    except RuntimeError as e:
-        logger.error(f"❌ Runtime error: {e}")
-        raise
+        nest_asyncio.apply()
+        loop = asyncio.get_event_loop()
+        loop.run_until_complete(main())
     except Exception as e:
-        logger.error(f"❌ Unexpected error: {e}")
+        logger.error(f"❌ Error in bot loop: {e}")
         raise
