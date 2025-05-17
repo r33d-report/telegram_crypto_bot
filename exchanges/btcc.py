@@ -69,6 +69,24 @@ class BTCCExchange(BaseExchange):
             self.logger.error(f"API request failed: {str(e)}")
             raise
 
+    def get_order_book(self, symbol: str, limit: int = 20) -> Dict[str, Any]:
+        """
+        Get order book for a symbol.
+
+        Args:
+            symbol (str): Trading pair symbol (e.g., 'BTC/USDT')
+            limit (int): Maximum number of orders to retrieve
+
+        Returns:
+            Dict[str, Any]: Order book data with bids and asks
+        """
+        formatted_symbol = symbol.replace('/', '_')
+        endpoint = f"/v1/market/depth/{formatted_symbol}"
+        params = {'limit': limit}
+        response = self._request('GET', endpoint, params=params)
+        self.logger.info(f"Retrieved order book for {symbol} with limit {limit}")
+        return response  
+        
     def get_ticker(self, symbol: str) -> Dict[str, Any]:
         formatted_symbol = symbol.replace("/", "_")
         endpoint = f"/v1/market/ticker/{formatted_symbol}"
