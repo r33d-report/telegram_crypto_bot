@@ -59,13 +59,15 @@ async def main():
 # Boot logic
 if __name__ == "__main__":
     logger.info("✅ Bot is starting...")
+
     try:
-        loop = asyncio.get_event_loop()
-        if loop.is_running():
-            logger.warning("⚠️ Loop is already running. Using ensure_future instead.")
-            loop.create_task(main())
-        else:
-            loop.run_until_complete(main())
+        import nest_asyncio
+        nest_asyncio.apply()  # Patch event loop if already running
+
+        asyncio.run(main())
+    except RuntimeError as e:
+        logger.error(f"❌ Runtime error: {e}")
+        raise
     except Exception as e:
-        logger.error(f"❌ Error in bot loop: {e}")
+        logger.error(f"❌ Unexpected error: {e}")
         raise
