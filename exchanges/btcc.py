@@ -72,14 +72,17 @@ class BTCCExchange(BaseExchange):
 
     def get_ticker(self, symbol: str) -> Dict[str, Any]:
         formatted_symbol = symbol.replace("/", "_").lower()
-        endpoint = "/v3/market/ticker-detail"
-        params = {"symbol": formatted_symbol}
-        return self._request("GET", endpoint, params=params)
+        endpoint = "/v3/market/ticker"
+        response = self._request("GET", endpoint)
+        for ticker in response.get("data", []):
+            if ticker.get("symbol") == formatted_symbol:
+                return ticker
+        raise ValueError(f"Symbol {formatted_symbol} not found")
 
     def get_current_price(self, symbol: str) -> str:
         try:
             ticker = self.get_ticker(symbol)
-            return ticker.get("data", {}).get("lastPrice", "N/A")
+            return ticker.get("lastPrice", "N/A")
         except Exception as e:
             self.logger.error(f"Failed to fetch price: {str(e)}")
             return "N/A"
