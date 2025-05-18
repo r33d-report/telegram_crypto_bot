@@ -33,6 +33,49 @@ async def buybtc_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     except Exception as e:
         msg = f"❌ Error placing order: {str(e)}"
     await update.message.reply_text(msg)
+
+# --- New command handlers ---
+
+async def balance_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    try:
+        balances = btcc.get_balances()  # you’ll build this method next
+        text = "💰 Your Balances:\n"
+        for asset, amount in balances.items():
+            text += f"{asset}: {amount}\n"
+    except Exception as e:
+        text = f"❌ Error getting balance: {str(e)}"
+    await update.message.reply_text(text)
+
+async def price_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    try:
+        symbol = context.args[0].upper() if context.args else "BTC"
+        pair = f"{symbol}/USDT"
+        price = btcc.get_current_price(pair)  # build this too
+        msg = f"📈 {pair} price is: ${price}"
+    except Exception as e:
+        msg = f"❌ Error fetching price: {str(e)}"
+    await update.message.reply_text(msg)
+
+async def sellbtc_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    try:
+        amount = 0.0005
+        result = btcc.place_market_order("BTC/USDT", "sell", amount)
+        msg = f"✅ Sell order placed:\nID: {result.get('data', {}).get('orderId', 'N/A')}"
+    except Exception as e:
+        msg = f"❌ Error placing sell order: {str(e)}"
+    await update.message.reply_text(msg)
+
+async def help_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    text = (
+        "🧾 *Crypto Bot Commands:*\n\n"
+        "/start - Launch the bot UI\n"
+        "/buybtc - Buy 0.0005 BTC\n"
+        "/sellbtc - Sell 0.0005 BTC\n"
+        "/balance - Show account balances\n"
+        "/price [COIN] - Show price of a coin (default BTC)\n"
+        "/help - Show this help message"
+    )
+    await update.message.reply_text(text, parse_mode="Markdown")
     
 # Entrypoint
 async def main():
