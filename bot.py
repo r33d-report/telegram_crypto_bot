@@ -48,14 +48,16 @@ async def main():
     logger.info("✅ Webhook deleted. Starting polling...")
     await app.run_polling()
 
-# Run logic (no close of event loop!)
+# Boot logic
 if __name__ == "__main__":
+    import asyncio
+    import nest_asyncio
+
     logger.info("✅ Bot is starting...")
-    nest_asyncio.apply()
-    loop = asyncio.get_event_loop()
 
     try:
-        loop.create_task(main())
-        loop.run_forever()
+        loop = asyncio.get_event_loop()
+        nest_asyncio.apply(loop)
+        loop.run_until_complete(main())  # not create_task + run_forever
     except Exception as e:
         logger.error(f"❌ Uncaught error in main: {e}")
