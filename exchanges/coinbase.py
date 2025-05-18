@@ -53,7 +53,7 @@ class CoinbaseExchange(BaseExchange):
             self.logger.error(f"Failed to fetch price for {pair}: {e}")
             return "N/A"
 
-        def cancel_order(self, order_id: str, symbol: Optional[str] = None) -> bool:
+    def cancel_order(self, order_id: str, symbol: Optional[str] = None) -> bool:
         self.logger.warning("cancel_order not implemented for Coinbase")
         return False
 
