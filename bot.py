@@ -94,6 +94,10 @@ async def main():
 
     app.add_handler(CommandHandler("start", start))
     app.add_handler(CommandHandler("buybtc", buybtc_command))
+    app.add_handler(CommandHandler("balance", balance_command))
+    app.add_handler(CommandHandler("price", price_command))
+    app.add_handler(CommandHandler("sellbtc", sellbtc_command))
+    app.add_handler(CommandHandler("help", help_command))
 
     logger.info("✅ Starting polling...")
     await app.run_polling()
