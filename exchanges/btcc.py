@@ -56,16 +56,32 @@ class BTCCExchange(BaseExchange):
             raise
 
     def get_ticker(self, symbol: str) -> Dict[str, Any]:
+        symbol_map = {
+            "btc": "bitcoin",
+            "eth": "ethereum",
+            "sol": "solana",
+            "xrp": "ripple",
+            "ada": "cardano",
+            "doge": "dogecoin"
+        }
+    
+        clean_symbol = symbol.lower().split("/")[0]
+        coin_id = symbol_map.get(clean_symbol)
+    
+        if not coin_id:
+            raise ValueError(f"Symbol '{symbol}' not supported.")
+    
         response = requests.get("https://api.coingecko.com/api/v3/simple/price", params={
-            "ids": "bitcoin",
+            "ids": coin_id,
             "vs_currencies": "usd"
         })
         response.raise_for_status()
         return response.json()
-
+    
     def get_current_price(self, symbol: str) -> str:
         prices = self.get_ticker(symbol)
-        return str(prices.get("bitcoin", {}).get("usd", "N/A"))
+        coin_id = list(prices.keys())[0]
+        return str(prices.get(coin_id, {}).get("usd", "N/A"))
 
     def get_balance(self) -> Dict[str, float]:
         endpoint = "/btcc_api_trade/asset/query"
