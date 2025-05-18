@@ -55,9 +55,11 @@ if __name__ == "__main__":
 
     logger.info("✅ Bot is starting...")
 
+    loop = asyncio.get_event_loop()
+    nest_asyncio.apply(loop)
+
     try:
-        loop = asyncio.get_event_loop()
-        nest_asyncio.apply(loop)
-        loop.run_until_complete(main())  # not create_task + run_forever
+        loop.create_task(main())
+        loop.run_forever()
     except Exception as e:
         logger.error(f"❌ Uncaught error in main: {e}")
