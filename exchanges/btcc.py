@@ -84,8 +84,8 @@ class BTCCExchange(BaseExchange):
         return balances
 
     def get_current_price(self, symbol: str) -> str:
-    ticker = self.get_ticker(symbol)
-    return ticker.get('data', {}).get('lastPrice', 'N/A')
+        ticker = self.get_ticker(symbol)
+        return ticker.get('data', {}).get('lastPrice', 'N/A')
 
     def get_order_book(self, symbol: str, limit: int = 20) -> Dict[str, Any]:
         formatted_symbol = symbol.replace('/', '_')
