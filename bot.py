@@ -6,7 +6,7 @@ from telegram import Update, ReplyKeyboardMarkup
 from telegram.ext import Application, CommandHandler, ContextTypes
 
 from exchanges.btcc import BTCCExchange
-# from exchanges.coinbase import CoinbaseExchange  # Optional: Uncomment if implemented
+from exchanges.coinbase import CoinbaseExchange
 
 from utils.logger import setup_logger
 
