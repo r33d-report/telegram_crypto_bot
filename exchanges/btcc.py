@@ -83,6 +83,10 @@ class BTCCExchange(BaseExchange):
             balances[asset['currency']] = float(asset['available'])
         return balances
 
+    def get_current_price(self, symbol: str) -> str:
+    ticker = self.get_ticker(symbol)
+    return ticker.get('data', {}).get('lastPrice', 'N/A')
+
     def get_order_book(self, symbol: str, limit: int = 20) -> Dict[str, Any]:
         formatted_symbol = symbol.replace('/', '_')
         endpoint = f"/v1/market/depth/{formatted_symbol}"
