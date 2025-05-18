@@ -72,8 +72,9 @@ class BTCCExchange(BaseExchange):
 
     def get_ticker(self, symbol: str) -> Dict[str, Any]:
         formatted_symbol = symbol.replace("/", "_")
-        endpoint = f"/v1/market/ticker/{formatted_symbol}"
-        return self._request("GET", endpoint)
+        endpoint = "/v3/market/ticker"
+        params = {"symbol": formatted_symbol}
+        return self._request("GET", endpoint, params=params)
 
     def get_balance(self) -> Dict[str, float]:
         endpoint = "/v1/account/balance"
