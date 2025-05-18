@@ -65,9 +65,8 @@ if __name__ == "__main__":
         except Exception as e:
             logger.error(f"❌ Uncaught error in main: {e}")
 
-    # Use this instead of run_until_complete
     loop.create_task(safe_main())
     try:
         loop.run_forever()
     except KeyboardInterrupt:
-        logger.info("🛑 Bot stopped manually.")
+        logger.info("🛑 Bot manually stopped.")
