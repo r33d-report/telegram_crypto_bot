@@ -7,16 +7,16 @@ from telegram.ext import Application, CommandHandler, ContextTypes
 from exchanges.btcc import BTCCExchange
 from utils.logger import setup_logger
 
-# Load env
+# Load environment variables
 load_dotenv()
 BOT_TOKEN = os.getenv("TELEGRAM_BOT_TOKEN")
 BTCC_API_KEY = os.getenv("BTCC_API_KEY")
 BTCC_API_SECRET = os.getenv("BTCC_API_SECRET")
 
-# Logger
+# Setup logger
 logger = setup_logger("bot")
 
-# Exchange instance
+# Initialize exchange
 btcc = BTCCExchange(api_key=BTCC_API_KEY, api_secret=BTCC_API_SECRET)
 
 # Handlers
@@ -34,7 +34,7 @@ async def buybtc_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
         msg = f"❌ Error placing order: {str(e)}"
     await update.message.reply_text(msg)
 
-# Main entrypoint
+# Entrypoint
 async def main():
     if not BOT_TOKEN:
         logger.error("❌ No bot token found.")
@@ -48,25 +48,14 @@ async def main():
     logger.info("✅ Webhook deleted. Starting polling...")
     await app.run_polling()
 
-# Run logic
-# Boot logic
+# Run logic (no close of event loop!)
 if __name__ == "__main__":
-    import nest_asyncio
-    import asyncio
-
     logger.info("✅ Bot is starting...")
-
+    nest_asyncio.apply()
     loop = asyncio.get_event_loop()
-    nest_asyncio.apply(loop)
 
-    async def safe_main():
-        try:
-            await main()
-        except Exception as e:
-            logger.error(f"❌ Uncaught error in main: {e}")
-
-    loop.create_task(safe_main())
     try:
+        loop.create_task(main())
         loop.run_forever()
-    except KeyboardInterrupt:
-        logger.info("🛑 Bot manually stopped.")
+    except Exception as e:
+        logger.error(f"❌ Uncaught error in main: {e}")
