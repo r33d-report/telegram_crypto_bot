@@ -12,7 +12,7 @@ from utils.logger import setup_logger
 
 
 class BTCCExchange(BaseExchange):
-    BASE_URL = os.getenv("BTCC_API_BASE_URL", "https://spotapi2.btcccdn.com")
+    BASE_URL = os.getenv("BTCC_API_BASE_URL", "https://api.btcc.com")
 
     def __init__(self, api_key: str, api_secret: str, logger: Optional[logging.Logger] = None):
         super().__init__(api_key, api_secret, logger or setup_logger("btcc_exchange"))
@@ -71,13 +71,9 @@ class BTCCExchange(BaseExchange):
             raise
 
     def get_ticker(self, symbol: str) -> Dict[str, Any]:
-        formatted_symbol = symbol.replace("/", "_").lower()
-        endpoint = "/v3/market/ticker"
-        response = self._request("GET", endpoint)
-        for ticker in response.get("data", []):
-            if ticker.get("symbol") == formatted_symbol:
-                return ticker
-        raise ValueError(f"Symbol {formatted_symbol} not found")
+        formatted_symbol = symbol.replace("/", "_")
+        endpoint = f"/v1/market/ticker/{formatted_symbol}"
+        return self._request("GET", endpoint)
 
     def get_current_price(self, symbol: str) -> str:
         try:
