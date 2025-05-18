@@ -53,11 +53,7 @@ class CoinbaseExchange(BaseExchange):
             self.logger.error(f"Failed to fetch price for {pair}: {e}")
             return "N/A"
 
-    def place_market_order(self, symbol: str, side: str, amount: float) -> Dict[str, Any]:
-        self.logger.warning("Market order execution not implemented for Coinbase.")
-        return {"status": "not_implemented", "message": "place_market_order not yet supported"}
-
-    def cancel_order(self, order_id: str, symbol: Optional[str] = None) -> bool:
+        def cancel_order(self, order_id: str, symbol: Optional[str] = None) -> bool:
         self.logger.warning("cancel_order not implemented for Coinbase")
         return False
 
@@ -72,7 +68,7 @@ class CoinbaseExchange(BaseExchange):
     def get_ticker(self, symbol: str) -> Dict[str, Any]:
         self.logger.warning("get_ticker not implemented for Coinbase (use get_current_price instead)")
         return {}
-    
+
     def place_limit_order(self, symbol: str, side: str, amount: float, price: float) -> Dict[str, Any]:
         self.logger.warning("place_limit_order not implemented for Coinbase")
         return {"status": "not_implemented", "message": "place_limit_order not yet supported"}
