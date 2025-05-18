@@ -38,7 +38,7 @@ async def buybtc_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 async def balance_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     try:
-        balances = btcc.get_balances()  # you’ll build this method next
+        balances = btcc.get_balance()  # <- was get_balances()
         text = "💰 Your Balances:\n"
         for asset, amount in balances.items():
             text += f"{asset}: {amount}\n"
