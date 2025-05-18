@@ -26,13 +26,8 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await update.message.reply_text("🤖 Welcome to the Crypto Bot!", reply_markup=markup)
 
 async def buybtc_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    try:
-        amount = 0.0005
-        result = btcc.place_market_order("BTC/USDT", "buy", amount)
-        msg = f"✅ Order placed:\nID: {result.get('data', {}).get('orderId', 'N/A')}"
-    except Exception as e:
-        msg = f"❌ Error placing order: {str(e)}"
-    await update.message.reply_text(msg)
+    logger.info("✅ /buybtc command received")
+    await update.message.reply_text("🧪 BuyBTC test response")
 
 # Entrypoint
 async def main():
