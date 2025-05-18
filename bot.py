@@ -21,11 +21,12 @@ logger = setup_logger("bot")
 
 # Initialize exchanges
 btcc = BTCCExchange(api_key=BTCC_API_KEY, api_secret=BTCC_API_SECRET)
-# coinbase = CoinbaseExchange(...)  # Optional: implement if needed
+COINBASE_API_KEY = os.getenv("COINBASE_API_KEY") 
+coinbase = CoinbaseExchange(api_key=COINBASE_API_KEY)
 
 EXCHANGES = {
     "btcc": btcc,
-    # "coinbase": coinbase,
+    "coinbase": coinbase,
 }
 
 # Handlers
