@@ -71,14 +71,18 @@ class BTCCExchange(BaseExchange):
             raise
 
     def get_ticker(self, symbol: str) -> Dict[str, Any]:
-        formatted_symbol = symbol.replace("/", "_")
+        formatted_symbol = symbol.replace("/", "_").lower()
         endpoint = "/v3/market/ticker-detail"
         params = {"symbol": formatted_symbol}
         return self._request("GET", endpoint, params=params)
 
     def get_current_price(self, symbol: str) -> str:
-        ticker = self.get_ticker(symbol)
-        return ticker.get('data', {}).get('lastPrice', 'N/A')
+        try:
+            ticker = self.get_ticker(symbol)
+            return ticker.get("data", {}).get("lastPrice", "N/A")
+        except Exception as e:
+            self.logger.error(f"Failed to fetch price: {str(e)}")
+            return "N/A"
 
     def get_balance(self) -> Dict[str, float]:
         endpoint = "/v1/account/balance"
