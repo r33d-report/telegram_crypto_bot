@@ -40,12 +40,19 @@ async def main():
         logger.error("❌ No bot token found.")
         return
 
+    # ⚠️ Temporarily create a bot instance just to delete the webhook early
+    from telegram import Bot
+    bot = Bot(token=BOT_TOKEN)
+    await bot.delete_webhook(drop_pending_updates=True)
+    logger.info("✅ Webhook deleted (pre-run).")
+
+    # Now build the actual application
     app = Application.builder().token(BOT_TOKEN).build()
+
     app.add_handler(CommandHandler("start", start))
     app.add_handler(CommandHandler("buybtc", buybtc_command))
 
-    await app.bot.delete_webhook(drop_pending_updates=True)
-    logger.info("✅ Webhook deleted. Starting polling...")
+    logger.info("✅ Starting polling...")
     await app.run_polling()
 
 # Boot logic
