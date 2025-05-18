@@ -51,8 +51,8 @@ async def main():
 # Run logic
 # Boot logic
 if __name__ == "__main__":
-    import asyncio
     import nest_asyncio
+    import asyncio
 
     logger.info("✅ Bot is starting...")
 
@@ -65,6 +65,7 @@ if __name__ == "__main__":
         except Exception as e:
             logger.error(f"❌ Uncaught error in main: {e}")
 
+    # Use this instead of run_until_complete
     loop.create_task(safe_main())
     try:
         loop.run_forever()
