@@ -72,3 +72,7 @@ class CoinbaseExchange(BaseExchange):
     def place_limit_order(self, symbol: str, side: str, amount: float, price: float) -> Dict[str, Any]:
         self.logger.warning("place_limit_order not implemented for Coinbase")
         return {"status": "not_implemented", "message": "place_limit_order not yet supported"}
+
+    def place_market_order(self, symbol: str, side: str, amount: float) -> Dict[str, Any]:
+        self.logger.warning("place_market_order not implemented for Coinbase")
+        return {"status": "not_implemented", "message": "place_market_order not yet supported"}
