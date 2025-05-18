@@ -72,9 +72,13 @@ class BTCCExchange(BaseExchange):
 
     def get_ticker(self, symbol: str) -> Dict[str, Any]:
         formatted_symbol = symbol.replace("/", "_")
-        endpoint = "/v3/market/ticker"
+        endpoint = "/v3/market/ticker-detail"
         params = {"symbol": formatted_symbol}
         return self._request("GET", endpoint, params=params)
+
+    def get_current_price(self, symbol: str) -> str:
+        ticker = self.get_ticker(symbol)
+        return ticker.get('data', {}).get('lastPrice', 'N/A')
 
     def get_balance(self) -> Dict[str, float]:
         endpoint = "/v1/account/balance"
@@ -83,10 +87,6 @@ class BTCCExchange(BaseExchange):
         for asset in response.get('data', []):
             balances[asset['currency']] = float(asset['available'])
         return balances
-
-    def get_current_price(self, symbol: str) -> str:
-        ticker = self.get_ticker(symbol)
-        return ticker.get('data', {}).get('lastPrice', 'N/A')
 
     def get_order_book(self, symbol: str, limit: int = 20) -> Dict[str, Any]:
         formatted_symbol = symbol.replace('/', '_')
