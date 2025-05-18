@@ -71,17 +71,16 @@ class BTCCExchange(BaseExchange):
             raise
 
     def get_ticker(self, symbol: str) -> Dict[str, Any]:
-        formatted_symbol = symbol.replace("/", "_")
-        endpoint = f"/v1/market/ticker/{formatted_symbol}"
-        return self._request("GET", endpoint)
+        response = requests.get("https://api.coingecko.com/api/v3/simple/price", params={
+            "ids": "bitcoin",
+            "vs_currencies": "usd"
+        })
+        response.raise_for_status()
+        return response.json()
 
     def get_current_price(self, symbol: str) -> str:
-        try:
-            ticker = self.get_ticker(symbol)
-            return ticker.get("lastPrice", "N/A")
-        except Exception as e:
-            self.logger.error(f"Failed to fetch price: {str(e)}")
-            return "N/A"
+        prices = self.get_ticker(symbol)
+        return str(prices.get("bitcoin", {}).get("usd", "N/A"))
 
     def get_balance(self) -> Dict[str, float]:
         endpoint = "/v1/account/balance"
