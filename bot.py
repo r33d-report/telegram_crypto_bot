@@ -134,6 +134,9 @@ if __name__ == "__main__":
     nest_asyncio.apply()
 
     try:
-        asyncio.get_event_loop().run_until_complete(main())
-    except Exception as e:
-        logger.error(f"❌ Uncaught error in main: {e}")
+        asyncio.run(main())
+    except RuntimeError as e:
+        if str(e) == "Cannot close a running event loop":
+            logger.warning("⚠️ Attempted to close a running event loop. Retrying without closing it...")
+        else:
+            logger.error(f"❌ Uncaught error in main: {e}")
