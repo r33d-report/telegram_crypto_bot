@@ -144,7 +144,7 @@ async def help_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
 if __name__ == "__main__":
     logger.info("✅ Bot is starting...")
 
-    async def run():
+    async def main():
         app = ApplicationBuilder().token(BOT_TOKEN).build()
 
         app.add_handler(CommandHandler("start", start))
@@ -159,11 +159,14 @@ if __name__ == "__main__":
         logger.info("✅ Webhook deleted (pre-run).")
         logger.info("✅ Starting polling...")
 
-        await app.run_polling()
+        await app.initialize()
+        await app.start()
+        await app.updater.start_polling()
+        await app.updater.idle()
 
     try:
         loop = asyncio.get_event_loop()
-        loop.create_task(run())
+        loop.create_task(main())
         loop.run_forever()
     except KeyboardInterrupt:
-        logger.info("👋 Bot stopped by user")
+        logger.info("👋 Bot stopped manually")
