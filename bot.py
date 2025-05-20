@@ -126,17 +126,30 @@ async def main():
     await app.run_polling()
 
 if __name__ == "__main__":
+    import asyncio
+    import logging
+
     logger.info("✅ Bot is starting...")
 
-    import nest_asyncio
-    import asyncio
+    from telegram import Bot
 
-    nest_asyncio.apply()
+    async def run():
+        # Delete webhook to switch to polling
+        bot = Bot(token=BOT_TOKEN)
+        await bot.delete_webhook(drop_pending_updates=True)
+        logger.info("✅ Webhook deleted (pre-run).")
 
-    try:
-        asyncio.run(main())
-    except RuntimeError as e:
-        if str(e) == "Cannot close a running event loop":
-            logger.warning("⚠️ Attempted to close a running event loop. Retrying without closing it...")
-        else:
-            logger.error(f"❌ Uncaught error in main: {e}")
+        app = Application.builder().token(BOT_TOKEN).build()
+
+        # Register handlers
+        app.add_handler(CommandHandler("start", start))
+        app.add_handler(CommandHandler("buybtc", buybtc_command))
+        app.add_handler(CommandHandler("sellbtc", sellbtc_command))
+        app.add_handler(CommandHandler("balance", balance_command))
+        app.add_handler(CommandHandler("price", price_command))
+        app.add_handler(CommandHandler("help", help_command))
+
+        logger.info("✅ Starting polling...")
+        await app.run_polling()
+
+    asyncio.run(run())
