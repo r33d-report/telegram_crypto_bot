@@ -7,23 +7,23 @@ from telegram.ext import Application, CommandHandler, ContextTypes
 
 from exchanges.btcc import BTCCExchange
 from exchanges.coinbase import CoinbaseExchange
-
 from utils.logger import setup_logger
 
 # Load environment variables
 load_dotenv()
 BOT_TOKEN = os.getenv("TELEGRAM_BOT_TOKEN")
+
 BTCC_API_KEY = os.getenv("BTCC_API_KEY")
 BTCC_API_SECRET = os.getenv("BTCC_API_SECRET")
+
+COINBASE_API_KEY = os.getenv("COINBASE_API_KEY")
+COINBASE_API_SECRET = os.getenv("COINBASE_API_SECRET")
 
 # Setup logger
 logger = setup_logger("bot")
 
 # Initialize exchanges
 btcc = BTCCExchange(api_key=BTCC_API_KEY, api_secret=BTCC_API_SECRET)
-COINBASE_API_KEY = os.getenv("COINBASE_API_KEY") 
-COINBASE_API_KEY = os.getenv("COINBASE_API_KEY") 
-COINBASE_API_SECRET = os.getenv("COINBASE_API_SECRET")  
 coinbase = CoinbaseExchange(api_key=COINBASE_API_KEY, api_secret=COINBASE_API_SECRET)
 
 EXCHANGES = {
@@ -118,12 +118,4 @@ async def main():
     logger.info("✅ Starting polling...")
     await app.run_polling()
 
-if __name__ == "__main__":
-    logger.info("✅ Bot is starting...")
-    loop = asyncio.get_event_loop()
-    nest_asyncio.apply(loop)
-    try:
-        loop.create_task(main())
-        loop.run_forever()
-    except Exception as e:
-        logger.error(f"❌ Uncaught error in main: {e}")
+if __name
