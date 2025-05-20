@@ -1,8 +1,7 @@
 import os
 import asyncio
-import nest_asyncio
 from dotenv import load_dotenv
-from telegram import Update, ReplyKeyboardMarkup
+from telegram import Update, ReplyKeyboardMarkup, Bot
 from telegram.ext import Application, CommandHandler, ContextTypes
 
 from exchanges.btcc import BTCCExchange
@@ -12,10 +11,8 @@ from utils.logger import setup_logger
 # Load environment variables
 load_dotenv()
 BOT_TOKEN = os.getenv("TELEGRAM_BOT_TOKEN")
-
 BTCC_API_KEY = os.getenv("BTCC_API_KEY")
 BTCC_API_SECRET = os.getenv("BTCC_API_SECRET")
-
 COINBASE_API_KEY = os.getenv("COINBASE_API_KEY")
 COINBASE_API_SECRET = os.getenv("COINBASE_API_SECRET")
 
@@ -74,18 +71,11 @@ async def balance_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await update.message.reply_text(text)
 
 async def price_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    symbol = context.args[0].upper() if context.args else "BTC"
-    exchange_name = context.args[1].lower() if len(context.args) > 1 else "btcc"
-    exchange = EXCHANGES.get(exchange_name)
-
-    if not exchange:
-        await update.message.reply_text(f"❌ Unknown exchange '{exchange_name}'")
-        return
-
     try:
+        symbol = context.args[0].upper() if context.args else "BTC"
         pair = f"{symbol}/USDT"
-        price = exchange.get_current_price(pair)
-        msg = f"📈 {pair} price from {exchange_name.upper()}: ${price}"
+        price = btcc.get_current_price(pair)
+        msg = f"📈 {pair} price is: ${price}"
     except Exception as e:
         msg = f"❌ Error fetching price: {str(e)}"
     await update.message.reply_text(msg)
@@ -94,27 +84,21 @@ async def help_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     text = (
         "🧾 *Crypto Bot Commands:*\n\n"
         "/start - Launch the bot UI\n"
-        "/buybtc - Buy 0.0005 BTC on BTCC\n"
-        "/sellbtc - Sell 0.0005 BTC on BTCC\n"
+        "/buybtc - Buy 0.0005 BTC\n"
+        "/sellbtc - Sell 0.0005 BTC\n"
         "/balance [exchange] - Show balances (default: btcc)\n"
-        "/price [symbol] [exchange] - Show price of coin (default: BTC, btcc)\n"
+        "/price [symbol] - Show coin price (default: BTC)\n"
         "/help - Show this help message"
     )
     await update.message.reply_text(text, parse_mode="Markdown")
 
-# Entrypoint
-async def main():
-    if not BOT_TOKEN:
-        logger.error("❌ No bot token found.")
-        return
-
-    from telegram import Bot
+# Start bot task
+async def run_bot():
     bot = Bot(token=BOT_TOKEN)
     await bot.delete_webhook(drop_pending_updates=True)
     logger.info("✅ Webhook deleted (pre-run).")
 
     app = Application.builder().token(BOT_TOKEN).build()
-
     app.add_handler(CommandHandler("start", start))
     app.add_handler(CommandHandler("buybtc", buybtc_command))
     app.add_handler(CommandHandler("sellbtc", sellbtc_command))
@@ -125,29 +109,9 @@ async def main():
     logger.info("✅ Starting polling...")
     await app.run_polling()
 
+# Entrypoint
 if __name__ == "__main__":
-    import asyncio
-    from telegram import Bot
-
     logger.info("✅ Bot is starting...")
-
-    async def run():
-        bot = Bot(token=BOT_TOKEN)
-        await bot.delete_webhook(drop_pending_updates=True)
-        logger.info("✅ Webhook deleted (pre-run).")
-
-        app = Application.builder().token(BOT_TOKEN).build()
-
-        # Register handlers
-        app.add_handler(CommandHandler("start", start))
-        app.add_handler(CommandHandler("buybtc", buybtc_command))
-        app.add_handler(CommandHandler("sellbtc", sellbtc_command))
-        app.add_handler(CommandHandler("balance", balance_command))
-        app.add_handler(CommandHandler("price", price_command))
-        app.add_handler(CommandHandler("help", help_command))
-
-        logger.info("✅ Starting polling...")
-        await app.run_polling()
-
-    asyncio.get_event_loop().create_task(run())
-    asyncio.get_event_loop().run_forever()
+    loop = asyncio.get_event_loop()
+    loop.create_task(run_bot())
+    loop.run_forever()
