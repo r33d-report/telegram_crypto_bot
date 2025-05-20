@@ -5,11 +5,13 @@ from dotenv import load_dotenv
 from telegram import Update, ReplyKeyboardMarkup, Bot
 from telegram.ext import Application, ApplicationBuilder, CommandHandler, ContextTypes
 
-# 🔧 Ensure there's a running event loop on Linux (Python 3.8+ fix)
-try:
-    asyncio.get_event_loop()
-except RuntimeError:
-    asyncio.set_event_loop(asyncio.new_event_loop())
+# ✅ Ensure event loop exists before any async usage (esp. for ApplicationBuilder)
+if sys.platform.startswith("linux"):
+    try:
+        asyncio.get_running_loop()
+    except RuntimeError:
+        loop = asyncio.new_event_loop()
+        asyncio.set_event_loop(loop)
 
 from exchanges.btcc import BTCCExchange
 from exchanges.coinbase import CoinbaseExchange
@@ -103,21 +105,12 @@ async def help_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
 if __name__ == "__main__":
     logger.info("✅ Bot is starting...")
 
-    # Set up event loop manually for safety
-    try:
-        loop = asyncio.get_event_loop()
-    except RuntimeError:
-        loop = asyncio.new_event_loop()
-        asyncio.set_event_loop(loop)
-
-    # Delete webhook before polling
+    loop = asyncio.get_event_loop()
     bot = Bot(token=BOT_TOKEN)
     loop.run_until_complete(bot.delete_webhook(drop_pending_updates=True))
     logger.info("✅ Webhook deleted (pre-run).")
 
-    # Build and run app
     app = ApplicationBuilder().token(BOT_TOKEN).build()
-
     app.add_handler(CommandHandler("start", start))
     app.add_handler(CommandHandler("buybtc", buybtc_command))
     app.add_handler(CommandHandler("sellbtc", sellbtc_command))
