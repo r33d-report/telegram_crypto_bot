@@ -54,9 +54,8 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
 async def callback_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
     query = update.callback_query
     await query.answer()
-    
     data = query.data
-    
+
     try:
         if data == "buy_btc":
             result = btcc.place_market_order("BTC/USDT", "buy", 0.0005)
@@ -81,7 +80,7 @@ async def callback_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
         msg = f"❌ Error: {str(e)}"
 
     await query.edit_message_text(msg)
-
+    
 async def buybtc_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     try:
         amount = 0.0005
