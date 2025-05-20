@@ -10,11 +10,12 @@ class CoinbaseExchange(BaseExchange):
 
     def __init__(self, api_key: str, api_secret: str = "", logger: Optional[logging.Logger] = None):
         super().__init__(api_key, api_secret, logger or setup_logger("coinbase_exchange"))
-        self.session = requests.Session()
+        self.api_key = api_key
+        self.api_secret = api_secret
         self.session.headers.update({
-            "Authorization": f"Bearer {api_key}",
-            "CB-VERSION": "2023-01-01",
-            "Content-Type": "application/json"
+            "Content-Type": "application/json",
+            "CB-ACCESS-KEY": self.api_key,
+            # Timestamp and signature will be added dynamically
         })
 
     def _request(self, method: str, endpoint: str, params: Dict = None, data: Dict = None, auth: bool = True) -> Dict[str, Any]:
