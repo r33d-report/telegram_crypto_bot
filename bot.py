@@ -118,4 +118,4 @@ async def main():
     logger.info("✅ Starting polling...")
     await app.run_polling()
 
-if __name
+if __name__ == "__main__":
