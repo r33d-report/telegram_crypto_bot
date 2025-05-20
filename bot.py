@@ -142,6 +142,9 @@ async def help_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 # Entrypoint
 if __name__ == "__main__":
+    import nest_asyncio
+    nest_asyncio.apply()  # 🔧 Prevent "event loop is already running" errors
+
     logger.info("✅ Bot is starting...")
 
     async def main():
@@ -162,5 +165,4 @@ if __name__ == "__main__":
         await app.run_polling()
 
     loop = asyncio.get_event_loop()
-    loop.create_task(main())
-    loop.run_forever()
+    loop.run_until_complete(main())
