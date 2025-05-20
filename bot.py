@@ -101,6 +101,19 @@ async def help_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     )
     await update.message.reply_text(text, parse_mode="Markdown")
 
+async def portfolio_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    user = update.effective_user
+    # TODO: Pull real portfolio data
+    await update.message.reply_text(f"📦 Portfolio for {user.first_name} is currently empty.")
+
+async def alerts_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    await update.message.reply_text("🔔 Alerts feature is under construction. You'll be able to manage price alerts soon.")
+
+async def trade_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    keyboard = [["Buy BTC", "Sell BTC"], ["Cancel"]]
+    markup = ReplyKeyboardMarkup(keyboard, resize_keyboard=True)
+    await update.message.reply_text("🛒 Choose a trade action:", reply_markup=markup)
+
 # Entrypoint
 if __name__ == "__main__":
     logger.info("✅ Bot is starting...")
@@ -117,6 +130,9 @@ if __name__ == "__main__":
     app.add_handler(CommandHandler("balance", balance_command))
     app.add_handler(CommandHandler("price", price_command))
     app.add_handler(CommandHandler("help", help_command))
+    app.add_handler(CommandHandler("portfolio", portfolio_command))
+    app.add_handler(CommandHandler("alerts", alerts_command))
+    app.add_handler(CommandHandler("trade", trade_command))
 
     logger.info("✅ Starting polling...")
     app.run_polling()
