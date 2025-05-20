@@ -3,10 +3,12 @@ import sys
 import asyncio
 from dotenv import load_dotenv
 from telegram import Update, ReplyKeyboardMarkup, Bot
-from telegram.ext import Application, CommandHandler, ContextTypes
+from telegram.ext import Application, ApplicationBuilder, CommandHandler, ContextTypes
 
-# Ensure there's a running event loop
-if sys.platform.startswith("linux"):
+# 🔧 Ensure there's a running event loop on Linux (Python 3.8+ fix)
+try:
+    asyncio.get_event_loop()
+except RuntimeError:
     asyncio.set_event_loop(asyncio.new_event_loop())
 
 from exchanges.btcc import BTCCExchange
@@ -101,21 +103,21 @@ async def help_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
 if __name__ == "__main__":
     logger.info("✅ Bot is starting...")
 
-    # Delete webhook first
+    # Set up event loop manually for safety
+    try:
+        loop = asyncio.get_event_loop()
+    except RuntimeError:
+        loop = asyncio.new_event_loop()
+        asyncio.set_event_loop(loop)
+
+    # Delete webhook before polling
     bot = Bot(token=BOT_TOKEN)
-    from asyncio import run
-    run(bot.delete_webhook(drop_pending_updates=True))
+    loop.run_until_complete(bot.delete_webhook(drop_pending_updates=True))
     logger.info("✅ Webhook deleted (pre-run).")
 
-    # Initialize app
-    import asyncio
-    import sys
-    
-    if sys.platform.startswith("linux") and not asyncio.get_event_loop_policy().get_event_loop().is_running():
-        asyncio.set_event_loop(asyncio.new_event_loop())
-    
-    from telegram.ext import ApplicationBuilder
+    # Build and run app
     app = ApplicationBuilder().token(BOT_TOKEN).build()
+
     app.add_handler(CommandHandler("start", start))
     app.add_handler(CommandHandler("buybtc", buybtc_command))
     app.add_handler(CommandHandler("sellbtc", sellbtc_command))
@@ -123,5 +125,5 @@ if __name__ == "__main__":
     app.add_handler(CommandHandler("price", price_command))
     app.add_handler(CommandHandler("help", help_command))
 
-    # Blocking run (safe for PM2)
+    logger.info("✅ Starting polling...")
     app.run_polling()
