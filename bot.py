@@ -55,7 +55,7 @@ async def callback_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
     query = update.callback_query
     await query.answer()
 
-    data = query.data
+        data = query.data
     if data == "buy_btc":
         result = btcc.place_market_order("BTC/USDT", "buy", 0.0005)
         order_id = result.get("data", {}).get("orderId", "N/A")
