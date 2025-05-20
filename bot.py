@@ -58,7 +58,7 @@ async def callback_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
     data = query.data
     if data == "buy_btc":
         result = btcc.place_market_order("BTC/USDT", "buy", 0.0005)
-        msg = f"✅ Buy BTC:
+        msg = f"✅ Buy BTC: Order placed successfully!"
 ID: {result.get('data', {}).get('orderId', 'N/A')}"
     elif data == "sell_btc":
         result = btcc.place_market_order("BTC/USDT", "sell", 0.0005)
