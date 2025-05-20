@@ -108,7 +108,14 @@ if __name__ == "__main__":
     logger.info("✅ Webhook deleted (pre-run).")
 
     # Initialize app
-    app = Application.builder().token(BOT_TOKEN).build()
+    import asyncio
+    import sys
+    
+    if sys.platform.startswith("linux") and not asyncio.get_event_loop_policy().get_event_loop().is_running():
+        asyncio.set_event_loop(asyncio.new_event_loop())
+    
+    from telegram.ext import ApplicationBuilder
+    app = ApplicationBuilder().token(BOT_TOKEN).build()
     app.add_handler(CommandHandler("start", start))
     app.add_handler(CommandHandler("buybtc", buybtc_command))
     app.add_handler(CommandHandler("sellbtc", sellbtc_command))
