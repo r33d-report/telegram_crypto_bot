@@ -56,23 +56,26 @@ async def callback_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await query.answer()
 
     data = query.data
-    if data == "buy_btc":
-        result = btcc.place_market_order("BTC/USDT", "buy", 0.0005)
-        msg = f"✅ Buy BTC:\nID: {result.get('data', {}).get('orderId', 'N/A')}"
-    elif data == "sell_btc":
-        result = btcc.place_market_order("BTC/USDT", "sell", 0.0005)
-        msg = f"✅ Sell BTC:\nID: {result.get('data', {}).get('orderId', 'N/A')}"
-    elif data == "price_btc":
-        price = btcc.get_current_price("BTC/USDT")
-        msg = f"📈 BTC/USDT: ${price}"
-    elif data == "balance_btcc":
-        balances = btcc.get_balance()
-        msg = "\n".join(f"{k}: {v}" for k, v in balances.items()) if balances else "No BTCC balances."
-    elif data == "balance_coinbase":
-        balances = coinbase.get_balance()
-        msg = "\n".join(f"{k}: {v}" for k, v in balances.items()) if balances else "No Coinbase balances."
-    else:
-        msg = "Unknown action."
+    try:
+        if data == "buy_btc":
+            result = btcc.place_market_order("BTC/USDT", "buy", 0.0005)
+            msg = f"✅ Buy BTC:\nID: {result.get('data', {}).get('orderId', 'N/A')}"
+        elif data == "sell_btc":
+            result = btcc.place_market_order("BTC/USDT", "sell", 0.0005)
+            msg = f"✅ Sell BTC:\nID: {result.get('data', {}).get('orderId', 'N/A')}"
+        elif data == "price_btc":
+            price = btcc.get_current_price("BTC/USDT")
+            msg = f"📈 BTC/USDT: ${price}"
+        elif data == "balance_btcc":
+            balances = btcc.get_balance()
+            msg = "\n".join(f"{k}: {v}" for k, v in balances.items()) if balances else "No BTCC balances."
+        elif data == "balance_coinbase":
+            balances = coinbase.get_balance()
+            msg = "\n".join(f"{k}: {v}" for k, v in balances.items()) if balances else "No Coinbase balances."
+        else:
+            msg = "Unknown action."
+    except Exception as e:
+        msg = f"❌ Error: {str(e)}"
 
     await query.edit_message_text(msg)
 
