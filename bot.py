@@ -144,11 +144,6 @@ async def help_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
 if __name__ == "__main__":
     logger.info("✅ Bot is starting...")
 
-    loop = asyncio.get_event_loop()
-    bot = Bot(token=BOT_TOKEN)
-    loop.run_until_complete(bot.delete_webhook(drop_pending_updates=True))
-    logger.info("✅ Webhook deleted (pre-run).")
-
     app = ApplicationBuilder().token(BOT_TOKEN).build()
     app.add_handler(CommandHandler("start", start))
     app.add_handler(CommandHandler("buybtc", buybtc_command))
@@ -158,5 +153,10 @@ if __name__ == "__main__":
     app.add_handler(CommandHandler("help", help_command))
     app.add_handler(CallbackQueryHandler(callback_handler))
 
-    logger.info("✅ Starting polling...")
-    app.run_polling()
+    async def run_bot():
+        await app.bot.delete_webhook(drop_pending_updates=True)
+        logger.info("✅ Webhook deleted (pre-run).")
+        logger.info("✅ Starting polling...")
+        await app.run_polling()
+
+    asyncio.run(run_bot())
