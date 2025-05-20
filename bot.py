@@ -74,11 +74,18 @@ async def balance_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await update.message.reply_text(text)
 
 async def price_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    symbol = context.args[0].upper() if context.args else "BTC"
+    exchange_name = context.args[1].lower() if len(context.args) > 1 else "btcc"
+    exchange = EXCHANGES.get(exchange_name)
+
+    if not exchange:
+        await update.message.reply_text(f"❌ Unknown exchange '{exchange_name}'")
+        return
+
     try:
-        symbol = context.args[0].upper() if context.args else "BTC"
         pair = f"{symbol}/USDT"
-        price = btcc.get_current_price(pair)
-        msg = f"📈 {pair} price is: ${price}"
+        price = exchange.get_current_price(pair)
+        msg = f"📈 {pair} price from {exchange_name.upper()}: ${price}"
     except Exception as e:
         msg = f"❌ Error fetching price: {str(e)}"
     await update.message.reply_text(msg)
@@ -87,10 +94,10 @@ async def help_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     text = (
         "🧾 *Crypto Bot Commands:*\n\n"
         "/start - Launch the bot UI\n"
-        "/buybtc - Buy 0.0005 BTC\n"
-        "/sellbtc - Sell 0.0005 BTC\n"
+        "/buybtc - Buy 0.0005 BTC on BTCC\n"
+        "/sellbtc - Sell 0.0005 BTC on BTCC\n"
         "/balance [exchange] - Show balances (default: btcc)\n"
-        "/price [symbol] - Show coin price (default: BTC)\n"
+        "/price [symbol] [exchange] - Show price of coin (default: BTC, btcc)\n"
         "/help - Show this help message"
     )
     await update.message.reply_text(text, parse_mode="Markdown")
@@ -120,8 +127,5 @@ async def main():
 
 if __name__ == "__main__":
     logger.info("✅ Bot is starting...")
-    import asyncio
-    import nest_asyncio
-
     nest_asyncio.apply()
     asyncio.run(main())
