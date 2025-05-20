@@ -131,11 +131,9 @@ if __name__ == "__main__":
     import nest_asyncio
     import asyncio
 
-    loop = asyncio.get_event_loop()
-    nest_asyncio.apply(loop)
+    nest_asyncio.apply()
 
     try:
-        loop.create_task(main())
-        loop.run_forever()
+        asyncio.get_event_loop().run_until_complete(main())
     except Exception as e:
         logger.error(f"❌ Uncaught error in main: {e}")
