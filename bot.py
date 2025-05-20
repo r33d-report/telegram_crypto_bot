@@ -144,19 +144,26 @@ async def help_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
 if __name__ == "__main__":
     logger.info("✅ Bot is starting...")
 
-    app = ApplicationBuilder().token(BOT_TOKEN).build()
-    app.add_handler(CommandHandler("start", start))
-    app.add_handler(CommandHandler("buybtc", buybtc_command))
-    app.add_handler(CommandHandler("sellbtc", sellbtc_command))
-    app.add_handler(CommandHandler("balance", balance_command))
-    app.add_handler(CommandHandler("price", price_command))
-    app.add_handler(CommandHandler("help", help_command))
-    app.add_handler(CallbackQueryHandler(callback_handler))
+    async def run():
+        app = ApplicationBuilder().token(BOT_TOKEN).build()
 
-    async def run_bot():
+        app.add_handler(CommandHandler("start", start))
+        app.add_handler(CommandHandler("buybtc", buybtc_command))
+        app.add_handler(CommandHandler("sellbtc", sellbtc_command))
+        app.add_handler(CommandHandler("balance", balance_command))
+        app.add_handler(CommandHandler("price", price_command))
+        app.add_handler(CommandHandler("help", help_command))
+        app.add_handler(CallbackQueryHandler(callback_handler))
+
         await app.bot.delete_webhook(drop_pending_updates=True)
         logger.info("✅ Webhook deleted (pre-run).")
         logger.info("✅ Starting polling...")
+
         await app.run_polling()
 
-    asyncio.run(run_bot())
+    try:
+        loop = asyncio.get_event_loop()
+        loop.create_task(run())
+        loop.run_forever()
+    except KeyboardInterrupt:
+        logger.info("👋 Bot stopped by user")
