@@ -1,7 +1,13 @@
 import os
+import sys
+import asyncio
 from dotenv import load_dotenv
 from telegram import Update, ReplyKeyboardMarkup, Bot
 from telegram.ext import Application, CommandHandler, ContextTypes
+
+# Ensure there's a running event loop
+if sys.platform.startswith("linux"):
+    asyncio.set_event_loop(asyncio.new_event_loop())
 
 from exchanges.btcc import BTCCExchange
 from exchanges.coinbase import CoinbaseExchange
