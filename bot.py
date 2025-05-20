@@ -2,8 +2,8 @@ import os
 import sys
 import asyncio
 from dotenv import load_dotenv
-from telegram import Update, ReplyKeyboardMarkup, Bot
-from telegram.ext import Application, ApplicationBuilder, CommandHandler, ContextTypes
+from telegram import Update, ReplyKeyboardMarkup, Bot, InlineKeyboardButton, InlineKeyboardMarkup
+from telegram.ext import Application, ApplicationBuilder, CommandHandler, CallbackQueryHandler, ContextTypes
 
 # ✅ Ensure event loop exists before any async usage (esp. for ApplicationBuilder)
 if sys.platform.startswith("linux"):
@@ -42,6 +42,41 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     keyboard = [["📊 Balance", "🐝 Deposit"], ["📈 Trade", "🔔 Alerts"], ["🧠 AI Strategy", "⚙️ Settings"]]
     markup = ReplyKeyboardMarkup(keyboard, resize_keyboard=True)
     await update.message.reply_text("🤖 Welcome to the Crypto Bot!", reply_markup=markup)
+
+    inline_buttons = [
+        [InlineKeyboardButton("Buy BTC", callback_data="buy_btc"), InlineKeyboardButton("Sell BTC", callback_data="sell_btc")],
+        [InlineKeyboardButton("Price BTC", callback_data="price_btc")],
+        [InlineKeyboardButton("Balance BTCC", callback_data="balance_btcc"), InlineKeyboardButton("Balance Coinbase", callback_data="balance_coinbase")]
+    ]
+    inline_markup = InlineKeyboardMarkup(inline_buttons)
+    await update.message.reply_text("Quick actions:", reply_markup=inline_markup)
+
+async def callback_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    query = update.callback_query
+    await query.answer()
+
+    data = query.data
+    if data == "buy_btc":
+        result = btcc.place_market_order("BTC/USDT", "buy", 0.0005)
+        msg = f"✅ Buy BTC:
+ID: {result.get('data', {}).get('orderId', 'N/A')}"
+    elif data == "sell_btc":
+        result = btcc.place_market_order("BTC/USDT", "sell", 0.0005)
+        msg = f"✅ Sell BTC:
+ID: {result.get('data', {}).get('orderId', 'N/A')}"
+    elif data == "price_btc":
+        price = btcc.get_current_price("BTC/USDT")
+        msg = f"📈 BTC/USDT: ${price}"
+    elif data == "balance_btcc":
+        balances = btcc.get_balance()
+        msg = "\n".join(f"{k}: {v}" for k, v in balances.items()) if balances else "No BTCC balances."
+    elif data == "balance_coinbase":
+        balances = coinbase.get_balance()
+        msg = "\n".join(f"{k}: {v}" for k, v in balances.items()) if balances else "No Coinbase balances."
+    else:
+        msg = "Unknown action."
+
+    await query.edit_message_text(msg)
 
 async def buybtc_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     try:
@@ -101,19 +136,6 @@ async def help_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     )
     await update.message.reply_text(text, parse_mode="Markdown")
 
-async def portfolio_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    user = update.effective_user
-    # TODO: Pull real portfolio data
-    await update.message.reply_text(f"📦 Portfolio for {user.first_name} is currently empty.")
-
-async def alerts_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    await update.message.reply_text("🔔 Alerts feature is under construction. You'll be able to manage price alerts soon.")
-
-async def trade_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    keyboard = [["Buy BTC", "Sell BTC"], ["Cancel"]]
-    markup = ReplyKeyboardMarkup(keyboard, resize_keyboard=True)
-    await update.message.reply_text("🛒 Choose a trade action:", reply_markup=markup)
-
 # Entrypoint
 if __name__ == "__main__":
     logger.info("✅ Bot is starting...")
@@ -130,9 +152,7 @@ if __name__ == "__main__":
     app.add_handler(CommandHandler("balance", balance_command))
     app.add_handler(CommandHandler("price", price_command))
     app.add_handler(CommandHandler("help", help_command))
-    app.add_handler(CommandHandler("portfolio", portfolio_command))
-    app.add_handler(CommandHandler("alerts", alerts_command))
-    app.add_handler(CommandHandler("trade", trade_command))
+    app.add_handler(CallbackQueryHandler(callback_handler))
 
     logger.info("✅ Starting polling...")
     app.run_polling()
