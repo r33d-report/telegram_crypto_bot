@@ -127,8 +127,11 @@ async def main():
 
 if __name__ == "__main__":
     logger.info("✅ Bot is starting...")
+    import nest_asyncio
+
     loop = asyncio.get_event_loop()
     nest_asyncio.apply(loop)
+
     try:
         loop.create_task(main())
         loop.run_forever()
