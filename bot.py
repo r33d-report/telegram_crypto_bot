@@ -1,5 +1,4 @@
 import os
-import asyncio
 from dotenv import load_dotenv
 from telegram import Update, ReplyKeyboardMarkup, Bot
 from telegram.ext import Application, CommandHandler, ContextTypes
@@ -92,12 +91,17 @@ async def help_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     )
     await update.message.reply_text(text, parse_mode="Markdown")
 
-# Start bot task
-async def run_bot():
+# Entrypoint
+if __name__ == "__main__":
+    logger.info("✅ Bot is starting...")
+
+    # Delete webhook first
     bot = Bot(token=BOT_TOKEN)
-    await bot.delete_webhook(drop_pending_updates=True)
+    from asyncio import run
+    run(bot.delete_webhook(drop_pending_updates=True))
     logger.info("✅ Webhook deleted (pre-run).")
 
+    # Initialize app
     app = Application.builder().token(BOT_TOKEN).build()
     app.add_handler(CommandHandler("start", start))
     app.add_handler(CommandHandler("buybtc", buybtc_command))
@@ -106,12 +110,5 @@ async def run_bot():
     app.add_handler(CommandHandler("price", price_command))
     app.add_handler(CommandHandler("help", help_command))
 
-    logger.info("✅ Starting polling...")
-    await app.run_polling()
-
-# Entrypoint
-if __name__ == "__main__":
-    logger.info("✅ Bot is starting...")
-    loop = asyncio.get_event_loop()
-    loop.create_task(run_bot())
-    loop.run_forever()
+    # Blocking run (safe for PM2)
+    app.run_polling()
