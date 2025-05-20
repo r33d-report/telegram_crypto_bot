@@ -159,14 +159,8 @@ if __name__ == "__main__":
         logger.info("✅ Webhook deleted (pre-run).")
         logger.info("✅ Starting polling...")
 
-        await app.initialize()
-        await app.start()
-        await app.updater.start_polling()
-        await app.updater.idle()
+        await app.run_polling()
 
-    try:
-        loop = asyncio.get_event_loop()
-        loop.create_task(main())
-        loop.run_forever()
-    except KeyboardInterrupt:
-        logger.info("👋 Bot stopped manually")
+    loop = asyncio.get_event_loop()
+    loop.create_task(main())
+    loop.run_forever()
