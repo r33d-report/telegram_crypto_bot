@@ -127,14 +127,11 @@ async def main():
 
 if __name__ == "__main__":
     import asyncio
-    import logging
+    from telegram import Bot
 
     logger.info("✅ Bot is starting...")
 
-    from telegram import Bot
-
     async def run():
-        # Delete webhook to switch to polling
         bot = Bot(token=BOT_TOKEN)
         await bot.delete_webhook(drop_pending_updates=True)
         logger.info("✅ Webhook deleted (pre-run).")
@@ -152,4 +149,5 @@ if __name__ == "__main__":
         logger.info("✅ Starting polling...")
         await app.run_polling()
 
-    asyncio.run(run())
+    asyncio.get_event_loop().create_task(run())
+    asyncio.get_event_loop().run_forever()
