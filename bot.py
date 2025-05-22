@@ -141,9 +141,6 @@ async def help_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await update.message.reply_text(text, parse_mode="Markdown")
 
 # Entrypoint
-import asyncio
-
-# Entrypoint
 if __name__ == "__main__":
     logger.info("✅ Bot is starting...")
 
