@@ -128,29 +128,25 @@ async def help_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await update.message.reply_text(text, parse_mode="Markdown")
 
 # Entrypoint
-async def main():
+def main():
     logger.info("✅ Bot is starting...")
 
+    application = ApplicationBuilder().token(BOT_TOKEN).build()
+    application.add_handler(CommandHandler("start", start))
+    application.add_handler(CommandHandler("buybtc", buybtc_command))
+    application.add_handler(CommandHandler("sellbtc", sellbtc_command))
+    application.add_handler(CommandHandler("balance", balance_command))
+    application.add_handler(CommandHandler("price", price_command))
+    application.add_handler(CommandHandler("help", help_command))
+    application.add_handler(CallbackQueryHandler(callback_handler))
+
     bot = Bot(token=BOT_TOKEN)
-    await bot.delete_webhook(drop_pending_updates=True)
+    asyncio.run(bot.delete_webhook(drop_pending_updates=True))
     logger.info("✅ Webhook deleted (pre-run).")
 
-    app = ApplicationBuilder().token(BOT_TOKEN).build()
-    app.add_handler(CommandHandler("start", start))
-    app.add_handler(CommandHandler("buybtc", buybtc_command))
-    app.add_handler(CommandHandler("sellbtc", sellbtc_command))
-    app.add_handler(CommandHandler("balance", balance_command))
-    app.add_handler(CommandHandler("price", price_command))
-    app.add_handler(CommandHandler("help", help_command))
-    app.add_handler(CallbackQueryHandler(callback_handler))
-
     logger.info("✅ Starting polling...")
-    await app.run_polling(close_loop=False)  # ✅ This keeps bot alive without crashing
+    application.run_polling()  # ✅ Do NOT await this
 
 
 if __name__ == "__main__":
-    import nest_asyncio
-    import asyncio
-
-    nest_asyncio.apply()
-    asyncio.get_event_loop().run_until_complete(main())  # ✅ This is safe now
+    main()
