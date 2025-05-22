@@ -3,9 +3,9 @@ import sys
 import asyncio
 from dotenv import load_dotenv
 from telegram import Update, ReplyKeyboardMarkup, Bot, InlineKeyboardButton, InlineKeyboardMarkup
-from telegram.ext import Application, ApplicationBuilder, CommandHandler, CallbackQueryHandler, ContextTypes
+from telegram.ext import ApplicationBuilder, Application, CommandHandler, CallbackQueryHandler, ContextTypes
 
-# ✅ Ensure event loop exists before any async usage
+# Ensure event loop exists
 if sys.platform.startswith("linux"):
     try:
         asyncio.get_running_loop()
@@ -17,7 +17,7 @@ from exchanges.btcc import BTCCExchange
 from exchanges.coinbase import CoinbaseExchange
 from utils.logger import setup_logger
 
-# Load environment variables
+# Load env variables
 load_dotenv()
 BOT_TOKEN = os.getenv("TELEGRAM_BOT_TOKEN")
 BTCC_API_KEY = os.getenv("BTCC_API_KEY")
@@ -25,17 +25,13 @@ BTCC_API_SECRET = os.getenv("BTCC_API_SECRET")
 COINBASE_API_KEY = os.getenv("COINBASE_API_KEY")
 COINBASE_API_SECRET = os.getenv("COINBASE_API_SECRET")
 
-# Setup logger
+# Logger
 logger = setup_logger("bot")
 
-# Initialize exchanges
+# Exchange setup
 btcc = BTCCExchange(api_key=BTCC_API_KEY, api_secret=BTCC_API_SECRET)
 coinbase = CoinbaseExchange(api_key=COINBASE_API_KEY, api_secret=COINBASE_API_SECRET)
-
-EXCHANGES = {
-    "btcc": btcc,
-    "coinbase": coinbase,
-}
+EXCHANGES = {"btcc": btcc, "coinbase": coinbase}
 
 # Handlers
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -54,18 +50,15 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
 async def callback_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
     query = update.callback_query
     await query.answer()
-
     data = query.data
 
     try:
         if data == "buy_btc":
             result = btcc.place_market_order("BTC/USDT", "buy", 0.0005)
-            order_id = result.get("data", {}).get("orderId", "N/A")
-            msg = f"✅ Buy BTC:\nID: {order_id}"
+            msg = f"✅ Buy BTC:\nID: {result.get('data', {}).get('orderId', 'N/A')}"
         elif data == "sell_btc":
             result = btcc.place_market_order("BTC/USDT", "sell", 0.0005)
-            order_id = result.get("data", {}).get("orderId", "N/A")
-            msg = f"✅ Sell BTC:\nID: {order_id}"
+            msg = f"✅ Sell BTC:\nID: {result.get('data', {}).get('orderId', 'N/A')}"
         elif data == "price_btc":
             price = btcc.get_current_price("BTC/USDT")
             msg = f"📈 BTC/USDT: ${price}"
@@ -84,8 +77,7 @@ async def callback_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 async def buybtc_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     try:
-        amount = 0.0005
-        result = btcc.place_market_order("BTC/USDT", "buy", amount)
+        result = btcc.place_market_order("BTC/USDT", "buy", 0.0005)
         msg = f"✅ Order placed:\nID: {result.get('data', {}).get('orderId', 'N/A')}"
     except Exception as e:
         msg = f"❌ Error placing order: {str(e)}"
@@ -93,8 +85,7 @@ async def buybtc_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 async def sellbtc_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     try:
-        amount = 0.0005
-        result = btcc.place_market_order("BTC/USDT", "sell", amount)
+        result = btcc.place_market_order("BTC/USDT", "sell", 0.0005)
         msg = f"✅ Sell order placed:\nID: {result.get('data', {}).get('orderId', 'N/A')}"
     except Exception as e:
         msg = f"❌ Error placing sell order: {str(e)}"
@@ -110,10 +101,7 @@ async def balance_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     try:
         balances = exchange.get_balance()
-        if not balances:
-            text = "🤷‍♂️ No balances found."
-        else:
-            text = "💰 Your Balances:\n" + "\n".join(f"{k.upper()}: {v:.4f}" for k, v in balances.items())
+        text = "💰 Your Balances:\n" + "\n".join(f"{k.upper()}: {v:.4f}" for k, v in balances.items()) if balances else "🤷‍♂️ No balances found."
     except Exception as e:
         text = f"❌ Error getting balance: {str(e)}"
     await update.message.reply_text(text)
@@ -121,9 +109,8 @@ async def balance_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
 async def price_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     try:
         symbol = context.args[0].upper() if context.args else "BTC"
-        pair = f"{symbol}/USDT"
-        price = btcc.get_current_price(pair)
-        msg = f"📈 {pair} price is: ${price}"
+        price = btcc.get_current_price(f"{symbol}/USDT")
+        msg = f"📈 {symbol}/USDT price is: ${price}"
     except Exception as e:
         msg = f"❌ Error fetching price: {str(e)}"
     await update.message.reply_text(msg)
@@ -141,25 +128,24 @@ async def help_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await update.message.reply_text(text, parse_mode="Markdown")
 
 # Entrypoint
-if __name__ == "__main__":
+async def main():
     logger.info("✅ Bot is starting...")
 
-    async def run_bot():
-        bot = Bot(token=BOT_TOKEN)
-        await bot.delete_webhook(drop_pending_updates=True)
-        logger.info("✅ Webhook deleted (pre-run).")
+    bot = Bot(token=BOT_TOKEN)
+    await bot.delete_webhook(drop_pending_updates=True)
+    logger.info("✅ Webhook deleted (pre-run).")
 
-        app = ApplicationBuilder().token(BOT_TOKEN).build()
-        app.add_handler(CommandHandler("start", start))
-        app.add_handler(CommandHandler("buybtc", buybtc_command))
-        app.add_handler(CommandHandler("sellbtc", sellbtc_command))
-        app.add_handler(CommandHandler("balance", balance_command))
-        app.add_handler(CommandHandler("price", price_command))
-        app.add_handler(CommandHandler("help", help_command))
-        app.add_handler(CallbackQueryHandler(callback_handler))
+    app = ApplicationBuilder().token(BOT_TOKEN).build()
+    app.add_handler(CommandHandler("start", start))
+    app.add_handler(CommandHandler("buybtc", buybtc_command))
+    app.add_handler(CommandHandler("sellbtc", sellbtc_command))
+    app.add_handler(CommandHandler("balance", balance_command))
+    app.add_handler(CommandHandler("price", price_command))
+    app.add_handler(CommandHandler("help", help_command))
+    app.add_handler(CallbackQueryHandler(callback_handler))
 
-        logger.info("✅ Starting polling...")
-        await app.run_polling()
-    
+    logger.info("✅ Starting polling...")
+    await app.run_polling()
+
 if __name__ == "__main__":
     asyncio.run(main())
