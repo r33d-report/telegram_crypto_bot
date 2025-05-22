@@ -142,8 +142,8 @@ async def help_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 # Entrypoint
 import nest_asyncio
+import asyncio
 
-# Entrypoint
 async def main():
     logger.info("✅ Bot is starting...")
 
@@ -161,10 +161,11 @@ async def main():
     app.add_handler(CallbackQueryHandler(callback_handler))
 
     logger.info("✅ Starting polling...")
-    await app.run_polling()
+    await app.initialize()
+    await app.start()
+    await app.updater.start_polling()
+    await app.updater.idle()  # Keeps the bot alive
 
 if __name__ == "__main__":
-    import asyncio
     nest_asyncio.apply()
-    loop = asyncio.get_event_loop()
-    loop.run_until_complete(main())
+    asyncio.get_event_loop().run_until_complete(main())
