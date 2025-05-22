@@ -123,7 +123,7 @@ async def help_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await update.message.reply_text(text, parse_mode="Markdown")
 
 # ✅ Async launcher
-def main():
+if __name__ == "__main__":
     logger.info("✅ Bot is starting...")
 
     app = ApplicationBuilder().token(BOT_TOKEN).build()
@@ -136,7 +136,4 @@ def main():
     app.add_handler(CallbackQueryHandler(callback_handler))
 
     logger.info("✅ Starting polling...")
-    app.run_polling()
-
-if __name__ == "__main__":
-    main()
+    app.run_polling()  # ✅ NOT awaited and no asyncio.run() used
