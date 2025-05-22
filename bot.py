@@ -128,6 +128,8 @@ async def help_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await update.message.reply_text(text, parse_mode="Markdown")
 
 # Entrypoint
+import asyncio
+
 def main():
     logger.info("✅ Bot is starting...")
 
@@ -145,8 +147,7 @@ def main():
     logger.info("✅ Webhook deleted (pre-run).")
 
     logger.info("✅ Starting polling...")
-    application.run_polling()  # ✅ Do NOT await this
-
+    asyncio.run(application.run_polling())  # ✅ FIXED: Ensure this is called inside `asyncio.run`
 
 if __name__ == "__main__":
     main()
