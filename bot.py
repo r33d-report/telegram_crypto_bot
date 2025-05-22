@@ -145,7 +145,10 @@ async def main():
     app.add_handler(CallbackQueryHandler(callback_handler))
 
     logger.info("✅ Starting polling...")
-    await app.run_polling(close_loop=False)  # ✅ IMPORTANT
+    await app.initialize()
+    await app.start()
+    await app.updater.start_polling()
+    await app.updater.wait()  # this line replaces the failing close()
 
 if __name__ == "__main__":
     import nest_asyncio
