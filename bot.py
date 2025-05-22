@@ -145,12 +145,12 @@ async def main():
     app.add_handler(CallbackQueryHandler(callback_handler))
 
     logger.info("✅ Starting polling...")
-    await app.run_polling(close_loop=False)  # ✅ This is the correct approach
+    await app.run_polling(close_loop=False)  # ✅ This keeps bot alive without crashing
+
 
 if __name__ == "__main__":
     import nest_asyncio
-    nest_asyncio.apply()
-
     import asyncio
-    loop = asyncio.get_event_loop()
-    loop.run_until_complete(main())
+
+    nest_asyncio.apply()
+    asyncio.get_event_loop().run_until_complete(main())  # ✅ This is safe now
