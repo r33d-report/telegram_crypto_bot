@@ -141,28 +141,28 @@ async def help_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await update.message.reply_text(text, parse_mode="Markdown")
 
 # Entrypoint
-import nest_asyncio
 import asyncio
 
-async def main():
+# Entrypoint
+if __name__ == "__main__":
     logger.info("✅ Bot is starting...")
 
-    bot = Bot(token=BOT_TOKEN)
-    await bot.delete_webhook(drop_pending_updates=True)
-    logger.info("✅ Webhook deleted (pre-run).")
+    async def run_bot():
+        bot = Bot(token=BOT_TOKEN)
+        await bot.delete_webhook(drop_pending_updates=True)
+        logger.info("✅ Webhook deleted (pre-run).")
 
-    app = ApplicationBuilder().token(BOT_TOKEN).build()
-    app.add_handler(CommandHandler("start", start))
-    app.add_handler(CommandHandler("buybtc", buybtc_command))
-    app.add_handler(CommandHandler("sellbtc", sellbtc_command))
-    app.add_handler(CommandHandler("balance", balance_command))
-    app.add_handler(CommandHandler("price", price_command))
-    app.add_handler(CommandHandler("help", help_command))
-    app.add_handler(CallbackQueryHandler(callback_handler))
+        app = ApplicationBuilder().token(BOT_TOKEN).build()
+        app.add_handler(CommandHandler("start", start))
+        app.add_handler(CommandHandler("buybtc", buybtc_command))
+        app.add_handler(CommandHandler("sellbtc", sellbtc_command))
+        app.add_handler(CommandHandler("balance", balance_command))
+        app.add_handler(CommandHandler("price", price_command))
+        app.add_handler(CommandHandler("help", help_command))
+        app.add_handler(CallbackQueryHandler(callback_handler))
 
-    logger.info("✅ Starting polling...")
-    await app.run_polling()
-
+        logger.info("✅ Starting polling...")
+        await app.run_polling()
+    
 if __name__ == "__main__":
-    nest_asyncio.apply()
     asyncio.run(main())
