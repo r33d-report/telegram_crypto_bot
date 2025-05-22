@@ -161,11 +161,8 @@ async def main():
     app.add_handler(CallbackQueryHandler(callback_handler))
 
     logger.info("✅ Starting polling...")
-    await app.initialize()
-    await app.start()
-    await app.updater.start_polling()
-    await app.updater.idle()  # Keeps the bot alive
+    await app.run_polling()
 
 if __name__ == "__main__":
     nest_asyncio.apply()
-    asyncio.get_event_loop().run_until_complete(main())
+    asyncio.run(main())
