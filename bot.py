@@ -149,5 +149,29 @@ def main():
     logger.info("✅ Starting polling...")
     asyncio.run(application.run_polling())  # ✅ FIXED: Ensure this is called inside `asyncio.run`
 
+from telegram.ext import ApplicationBuilder
+
+# ... your imports and handler definitions ...
+
 if __name__ == "__main__":
-    main()
+    from telegram import Bot
+
+    logger.info("✅ Bot is starting...")
+
+    bot = Bot(token=BOT_TOKEN)
+
+    import asyncio
+    asyncio.run(bot.delete_webhook(drop_pending_updates=True))
+    logger.info("✅ Webhook deleted (pre-run).")
+
+    application = ApplicationBuilder().token(BOT_TOKEN).build()
+    application.add_handler(CommandHandler("start", start))
+    application.add_handler(CommandHandler("buybtc", buybtc_command))
+    application.add_handler(CommandHandler("sellbtc", sellbtc_command))
+    application.add_handler(CommandHandler("balance", balance_command))
+    application.add_handler(CommandHandler("price", price_command))
+    application.add_handler(CommandHandler("help", help_command))
+    application.add_handler(CallbackQueryHandler(callback_handler))
+
+    logger.info("✅ Starting polling...")
+    application.run_polling()  # <-- DO NOT wrap this in asyncio.run()!
