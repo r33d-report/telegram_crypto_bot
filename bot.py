@@ -141,28 +141,30 @@ async def help_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await update.message.reply_text(text, parse_mode="Markdown")
 
 # Entrypoint
-if __name__ == "__main__":
-    import nest_asyncio
-    nest_asyncio.apply()  # 🔧 Prevent "event loop is already running" errors
+import nest_asyncio
 
+# Entrypoint
+async def main():
     logger.info("✅ Bot is starting...")
 
-    async def main():
-        app = ApplicationBuilder().token(BOT_TOKEN).build()
+    bot = Bot(token=BOT_TOKEN)
+    await bot.delete_webhook(drop_pending_updates=True)
+    logger.info("✅ Webhook deleted (pre-run).")
 
-        app.add_handler(CommandHandler("start", start))
-        app.add_handler(CommandHandler("buybtc", buybtc_command))
-        app.add_handler(CommandHandler("sellbtc", sellbtc_command))
-        app.add_handler(CommandHandler("balance", balance_command))
-        app.add_handler(CommandHandler("price", price_command))
-        app.add_handler(CommandHandler("help", help_command))
-        app.add_handler(CallbackQueryHandler(callback_handler))
+    app = ApplicationBuilder().token(BOT_TOKEN).build()
+    app.add_handler(CommandHandler("start", start))
+    app.add_handler(CommandHandler("buybtc", buybtc_command))
+    app.add_handler(CommandHandler("sellbtc", sellbtc_command))
+    app.add_handler(CommandHandler("balance", balance_command))
+    app.add_handler(CommandHandler("price", price_command))
+    app.add_handler(CommandHandler("help", help_command))
+    app.add_handler(CallbackQueryHandler(callback_handler))
 
-        await app.bot.delete_webhook(drop_pending_updates=True)
-        logger.info("✅ Webhook deleted (pre-run).")
-        logger.info("✅ Starting polling...")
+    logger.info("✅ Starting polling...")
+    await app.run_polling()
 
-        await app.run_polling()
-
+if __name__ == "__main__":
+    import asyncio
+    nest_asyncio.apply()
     loop = asyncio.get_event_loop()
     loop.run_until_complete(main())
